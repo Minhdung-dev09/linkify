@@ -8,7 +8,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getToken } from "@/lib/auth";
-import { apiCreateLink, apiListLinks } from "@/lib/api";
+import { apiCreateLink, apiListLinks, type ApiLink } from "@/lib/api";
 
 export default function CreateLinkPage() {
   const token = getToken();
@@ -92,7 +92,7 @@ export default function CreateLinkPage() {
                 </tr>
               </thead>
               <tbody>
-                {list?.links?.map((l) => (
+                {(list?.links as ApiLink[] | undefined)?.map((l: ApiLink) => (
                   <tr key={l.slug} className="border-t border-border/40">
                     <td className="py-2 pr-4">{l.slug}</td>
                     <td className="py-2 pr-4 truncate max-w-[280px]" title={l.destination}>{l.destination}</td>
