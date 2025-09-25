@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { APP_DOMAIN } from "@/utils/constants/site";
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
 import PieChart from "@/components/charts/PieChart";
@@ -47,6 +48,14 @@ export default function DashboardClient() {
   });
 
   const clicks = mockTimeSeries(14);
+
+  const shortBaseUrl = useMemo(() => {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL as string | undefined;
+    try {
+      if (apiBase) return new URL(apiBase).origin;
+    } catch (_) {}
+    return APP_DOMAIN;
+  }, []);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -146,7 +155,7 @@ export default function DashboardClient() {
                 <tbody>
                   {links.map((l) => (
                     <tr key={l.id} className="border-t border-border/40">
-                      <td className="py-2 pr-4">{`${process.env.NEXT_PUBLIC_APP_URL}/${l.short}`}</td>
+                      <td className="py-2 pr-4">{`${shortBaseUrl}/${l.short}`}</td>
                       <td className="py-2 pr-4 truncate max-w-[220px]" title={l.destination}>{l.destination}</td>
                       <td className="py-2 pr-4">{l.clicks}</td>
                       <td className="py-2 pr-4">{l.createdAt}</td>
@@ -154,7 +163,7 @@ export default function DashboardClient() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => copyToClipboard(`${process.env.NEXT_PUBLIC_APP_URL}/${l.short}`)}
+                          onClick={() => copyToClipboard(`${shortBaseUrl}/${l.short}`)}
                         >
                           Copy
                         </Button>
