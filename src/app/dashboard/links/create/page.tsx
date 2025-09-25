@@ -51,12 +51,12 @@ export default function CreateLinkPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold">Tạo liên kết</h1>
           <p className="text-muted-foreground mt-1">Rút gọn URL, tùy chọn slug, mật khẩu và hết hạn</p>
         </div>
-        <Button asChild variant="ghost">
+        <Button asChild variant="ghost" className="w-full sm:w-auto">
           <a href="/dashboard">Quay về Dashboard</a>
         </Button>
       </div>

@@ -18,12 +18,14 @@ import { clearToken } from "@/lib/auth";
 import { LucideIcon, Menu, X } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from 'react';
+import PricingModal from "../ui/pricing-modal";
 
 const MobileNavbar = () => {
 
     const isSignedIn = typeof window !== "undefined" && (document.cookie.includes("token=") || !!localStorage.getItem("auth_token"));
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [pricingModalOpen, setPricingModalOpen] = useState(false);
 
     const handleClose = () => {
         setIsOpen(false);
@@ -93,13 +95,25 @@ const MobileNavbar = () => {
                                                 </AccordionContent>
                                             </>
                                         ) : (
-                                            <Link
-                                                href={link.href}
-                                                onClick={handleClose}
-                                                className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
-                                            >
-                                                <span>{link.title}</span>
-                                            </Link>
+                                            link.isModal ? (
+                                                <button
+                                                    onClick={() => {
+                                                        setPricingModalOpen(true);
+                                                        handleClose();
+                                                    }}
+                                                    className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <span>{link.title}</span>
+                                                </button>
+                                            ) : (
+                                                <Link
+                                                    href={link.href}
+                                                    onClick={handleClose}
+                                                    className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <span>{link.title}</span>
+                                                </Link>
+                                            )
                                         )}
                                     </AccordionItem>
                                 ))}
@@ -108,6 +122,8 @@ const MobileNavbar = () => {
                     </div>
                 </SheetContent>
             </Sheet>
+            
+            <PricingModal open={pricingModalOpen} onOpenChange={setPricingModalOpen} />
         </div>
     )
 };

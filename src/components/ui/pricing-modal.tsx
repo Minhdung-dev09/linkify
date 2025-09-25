@@ -42,27 +42,27 @@ const PricingModal = ({ open, onOpenChange }: PricingModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className=" w-full sm:mx-auto max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <DialogTitle className="text-2xl font-bold"> CCme - Thông báo hệ thống</DialogTitle>
+              <DialogTitle className="text-xl sm:text-2xl font-bold"> CCme - Thông báo hệ thống</DialogTitle>
             </div>
           </div>
-          <DialogDescription className="text-base">
+          <DialogDescription className="text-sm sm:text-base">
             Hiện tại hệ thống đang trong giai đoạn thử nghiệm
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Main message */}
-          <div className="text-center space-y-4">
-            <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg p-6 border border-primary/20">
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+          <div className="text-center space-y-3 sm:space-y-4">
+            <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg p-4 sm:p-6 border border-primary/20">
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                 🚀 Hệ thống đang trong giai đoạn Beta
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Chúng tôi đang hoàn thiện các tính năng và tối ưu hóa trải nghiệm người dùng. 
                 Hệ thống sẽ chính thức ra mắt vào ngày <span className="font-semibold text-primary">15/10/2025</span>.
               </p>
@@ -70,13 +70,13 @@ const PricingModal = ({ open, onOpenChange }: PricingModalProps) => {
           </div>
 
           {/* Countdown timer */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span className="text-sm font-medium">Thời gian còn lại:</span>
             </div>
             
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4">
               {[
                 { label: "Ngày", value: timeLeft.days },
                 { label: "Giờ", value: timeLeft.hours },
@@ -84,17 +84,17 @@ const PricingModal = ({ open, onOpenChange }: PricingModalProps) => {
                 { label: "Giây", value: timeLeft.seconds }
               ].map((item, index) => (
                 <div key={index} className="text-center">
-                  <div className="bg-white border border-border rounded-lg p-4 shadow-sm">
-                    <div className="text-2xl font-bold text-black">{String(item.value).padStart(2, '0')}</div>
+                  <div className="bg-white border border-border rounded-lg p-2 sm:p-4 shadow-sm">
+                    <div className="text-lg sm:text-2xl font-bold text-black">{String(item.value).padStart(2, '0')}</div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-2 font-medium">{item.label}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2 font-medium">{item.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Features preview */}
-          <div className="space-y-4">
+          {/* Features preview - hidden on mobile */}
+          <div className="hidden sm:block space-y-4">
             <h4 className="text-lg font-semibold text-center">Tính năng sắp ra mắt</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
@@ -113,8 +113,8 @@ const PricingModal = ({ open, onOpenChange }: PricingModalProps) => {
             </div>
           </div>
 
-          {/* CTA */}
-          <div className="text-center space-y-4 pt-4 border-t border-border">
+          {/* CTA - hidden on mobile */}
+          <div className="hidden sm:block text-center space-y-4 pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground">
               Trong thời gian chờ đợi, bạn có thể sử dụng các tính năng cơ bản miễn phí
             </p>

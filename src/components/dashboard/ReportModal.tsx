@@ -130,7 +130,7 @@ const ReportModal = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="ml-2">
+        <Button variant="outline" className="w-full sm:w-auto sm:ml-2">
           <Download className="h-4 w-4 mr-2" />Tải báo cáo
         </Button>
       </DialogTrigger>
