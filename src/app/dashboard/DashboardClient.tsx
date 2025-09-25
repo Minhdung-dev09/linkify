@@ -6,7 +6,7 @@ import { getToken } from "@/lib/auth";
 import { apiAnalyticsSummary, apiListLinks, apiUpdateLink, apiDeleteLink } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, EyeOff } from "lucide-react";
+import { MoreHorizontal, Eye, EyeOff, Filter, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { APP_DOMAIN } from "@/utils/constants/site";
 import LineChart from "@/components/charts/LineChart";
@@ -14,7 +14,11 @@ import BarChart from "@/components/charts/BarChart";
 import PieChart from "@/components/charts/PieChart";
 import { mockTimeSeries } from "@/lib/mock";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { buttonVariants } from "@/components/ui/button";
+import { ResponsiveContainer, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, BarChart as RBarChart, Bar } from "recharts";
 
 interface LinkItem {
   id: string;
@@ -32,6 +36,11 @@ export default function DashboardClient() {
   const [selectedLinkId, setSelectedLinkId] = useState<string>("all");
   const [qrSlug, setQrSlug] = useState<string | null>(null);
   const [showPw, setShowPw] = useState<Record<string, boolean>>({});
+  const [showFilters, setShowFilters] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedDevices, setSelectedDevices] = useState<string[]>(["desktop","mobile","tablet"]);
+  const [rangePreset, setRangePreset] = useState<"1h" | "3h" | "24h" | "1m" | "1y">("24h");
 
   const token = getToken();
   const queryClient = useQueryClient();
@@ -57,11 +66,26 @@ export default function DashboardClient() {
   const [granularity, setGranularity] = useState<"hour" | "day" | "month" | "year">("day");
   const [days, setDays] = useState<number>(14);
   const { data: analytics } = useQuery({
-    queryKey: ["analytics", selectedLinkId, granularity, days],
-    queryFn: async () => token ? apiAnalyticsSummary(token, { slug: selectedLinkId === "all" ? undefined : selectedLinkId, days, granularity }) : null,
+    queryKey: ["analytics", selectedLinkId, granularity, days, selectedDevices.join(',')],
+    queryFn: async () => token ? apiAnalyticsSummary(token, { slug: selectedLinkId === "all" ? undefined : selectedLinkId, days, granularity, devices: selectedDevices }) : null,
   });
 
   const clicks = mockTimeSeries(14);
+
+  const hourlyData = useMemo(() => {
+    const base = Array.from({ length: 24 }, (_, h) => ({ hour: String(h).padStart(2, '0'), value: 0 }));
+    const src: any[] = (analytics?.clicksOverTime as any[]) || [];
+    for (const d of src) {
+      const label = String((d as any)?.label || "");
+      const value = Number((d as any)?.value || 0);
+      const match = label.match(/\b(\d{2}):?\d{2}\b/);
+      const h = match ? parseInt(match[1], 10) : NaN;
+      if (!Number.isNaN(h) && h >= 0 && h < 24) {
+        base[h].value += value;
+      }
+    }
+    return base;
+  }, [analytics]);
 
   const shortBaseUrl = useMemo(() => {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL as string | undefined;
@@ -161,16 +185,64 @@ export default function DashboardClient() {
           <option value={90}>90 ngày</option>
           <option value={365}>1 năm</option>
         </select>
-        <select
-          value={granularity}
-          onChange={(e) => setGranularity(e.target.value as any)}
-          className="h-9 rounded-md border bg-background px-3 text-sm"
-        >
-          <option value="hour">Giờ</option>
-          <option value="day">Ngày</option>
-          <option value="month">Tháng</option>
-          <option value="year">Năm</option>
-        </select>
+        <Dialog open={showFilters} onOpenChange={setShowFilters}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="h-9 rounded-md px-3">
+              <Filter className="h-4 w-4 mr-2" />Bộ lọc
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Bộ lọc nâng cao</DialogTitle>
+              <DialogDescription>Tùy chỉnh dữ liệu hiển thị</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm mb-1">Từ ngày</div>
+                  <Input type="date" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+                </div>
+                <div>
+                  <div className="text-sm mb-1">Đến ngày</div>
+                  <Input type="date" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <div className="text-sm">Thiết bị</div>
+                <div className="flex gap-4 mt-2">
+                  {(["desktop","mobile","tablet"] as const).map((d) => (
+                    <label key={d} className="flex items-center gap-2 text-sm capitalize">
+                      <Checkbox
+                        checked={selectedDevices.includes(d)}
+                        onCheckedChange={(ck) => {
+                          if (ck) {
+                            setSelectedDevices((prev) => [...prev, d]);
+                          } else {
+                            setSelectedDevices((prev) => prev.filter((x) => x !== d));
+                          }
+                        }}
+                      />
+                      {d}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={()=>{setDateFrom("");setDateTo("");setSelectedDevices(["desktop","mobile","tablet"]);}}>Đặt lại</Button>
+                <Button className="flex-1" onClick={()=>{
+                  if (dateFrom && dateTo) {
+                    const from = new Date(dateFrom).getTime();
+                    const to = new Date(dateTo).getTime();
+                    const diffDays = Math.max(1, Math.ceil((to - from) / 86400000));
+                    setDays(diffDays);
+                    setGranularity(diffDays<=2?"hour":diffDays<=90?"day":diffDays<=365?"month":"year");
+                  }
+                  setShowFilters(false);
+                }}>Áp dụng</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -247,10 +319,27 @@ export default function DashboardClient() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Clicks over time</CardTitle>
+            <CardTitle className="text-lg">Top Referrers</CardTitle>
           </CardHeader>
           <CardContent>
-            <LineChart data={analytics?.clicksOverTime || []} />
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-muted-foreground">
+                  <tr className="text-left">
+                    <th className="py-2 pr-4">Nguồn</th>
+                    <th className="py-2 pr-4">Clicks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(analytics?.referrers || []).map((r: any, idx: number) => (
+                    <tr key={idx} className="border-t border-border/40">
+                      <td className="py-2 pr-4 truncate max-w-[220px]" title={r.label || "(Direct)"}>{r.label || "(Direct)"}</td>
+                      <td className="py-2 pr-4">{r.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -327,10 +416,22 @@ export default function DashboardClient() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Age</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Phân bố theo thời gian</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <PieChart data={[]} />
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RBarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#22c55e" radius={[3,3,0,0]} />
+                </RBarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -19,7 +19,7 @@ const Footer = () => {
                             Manage your links with ease.
                         </p>
                         <span className="mt-4 text-neutral-200 text-sm flex items-center">
-                            Made by <Link href="https://shreyas-sihasane.vercel.app/" className="font-semibold ml-1">Shreyas</Link>
+                            Made by <Link href="https://t.me/minhdung0903d" className="font-semibold ml-1">Founders of CCME</Link>
                         </span>
                     </div>
                 </AnimationContainer>
@@ -137,13 +137,13 @@ const Footer = () => {
             <div className="mt-8 border-t border-border/40 pt-4 md:pt-8 md:flex md:items-center md:justify-between w-full">
                 <AnimationContainer delay={0.6}>
                     <p className="text-sm text-muted-foreground mt-8 md:mt-0">
-                        &copy; {new Date().getFullYear()} Linkify INC. All rights reserved.
+                        &copy; {new Date().getFullYear()} From BunsThuis with ❤️
                     </p>
                 </AnimationContainer>
             </div>
 
             <div className="h-[20rem] lg:h-[20rem] hidden md:flex items-center justify-center">
-                <TextHoverEffect text="LINKIFY" />
+                <TextHoverEffect text="CCME LINKIFY" />
             </div>
         </footer>
     )
