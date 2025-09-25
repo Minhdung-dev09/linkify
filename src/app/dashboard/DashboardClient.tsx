@@ -123,7 +123,7 @@ export default function DashboardClient() {
                 <tbody>
                   {links.map((l) => (
                     <tr key={l.id} className="border-t border-border/40">
-                      <td className="py-2 pr-4">{l.short}</td>
+                      <td className="py-2 pr-4">{"ccme-shortlink.click/" + l.short}</td>
                       <td className="py-2 pr-4 truncate max-w-[220px]" title={l.destination}>{l.destination}</td>
                       <td className="py-2 pr-4">{l.clicks}</td>
                       <td className="py-2 pr-4">{l.createdAt}</td>
