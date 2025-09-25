@@ -15,7 +15,7 @@ export const CARDS = [
         Icon: Link2Icon,
         name: "Shorten links",
         description: "Create short links that are easy to remember and share.",
-        href: "#",
+        href: "/dashboard",
         cta: "Learn more",
         className: "col-span-3 lg:col-span-1",
         background: (
@@ -45,7 +45,7 @@ export const CARDS = [
         Icon: SearchIcon,
         name: "Search your links",
         description: "Quickly find the links you need with AI-powered search.",
-        href: "#",
+        href: "/dashboard",
         cta: "Learn more",
         className: "col-span-3 lg:col-span-2",
         background: (
@@ -66,7 +66,7 @@ export const CARDS = [
         Icon: WaypointsIcon,
         name: "Connect your apps",
         description: "Integrate with your favorite apps and services.",
-        href: "#",
+        href: "/dashboard",
         cta: "Learn more",
         className: "col-span-3 lg:col-span-2 max-w-full overflow-hidden",
         background: (
@@ -78,7 +78,7 @@ export const CARDS = [
         name: "Calendar",
         description: "Keep track of your links with our calendar view.",
         className: "col-span-3 lg:col-span-1",
-        href: "#",
+        href: "/dashboard",
         cta: "Learn more",
         background: (
             <Calendar

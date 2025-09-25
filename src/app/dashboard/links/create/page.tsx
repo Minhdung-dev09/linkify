@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getToken } from "@/lib/auth";
@@ -18,6 +18,8 @@ export default function CreateLinkPage() {
   const [password, setPassword] = useState("");
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [showPw, setShowPw] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const linksPerPage = 5;
 
   const { data: list, refetch } = useQuery({
     queryKey: ["links"],
@@ -26,6 +28,13 @@ export default function CreateLinkPage() {
       return apiListLinks(token);
     },
   });
+
+  // Pagination logic
+  const links = (list?.links as ApiLink[] | undefined) || [];
+  const totalPages = Math.ceil(links.length / linksPerPage);
+  const startIndex = (currentPage - 1) * linksPerPage;
+  const endIndex = startIndex + linksPerPage;
+  const currentLinks = links.slice(startIndex, endIndex);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -47,6 +56,9 @@ export default function CreateLinkPage() {
           <h1 className="text-2xl md:text-3xl font-semibold">Tạo liên kết</h1>
           <p className="text-muted-foreground mt-1">Rút gọn URL, tùy chọn slug, mật khẩu và hết hạn</p>
         </div>
+        <Button asChild variant="ghost">
+          <a href="/dashboard">Quay về Dashboard</a>
+        </Button>
       </div>
 
       <Card>
@@ -97,7 +109,7 @@ export default function CreateLinkPage() {
                 </tr>
               </thead>
               <tbody>
-                {(list?.links as ApiLink[] | undefined)?.map((l: ApiLink) => (
+                {currentLinks.map((l: ApiLink) => (
                   <tr key={l.slug} className="border-t border-border/40">
                     <td className="py-2 pr-4">{l.slug}</td>
                     <td className="py-2 pr-4 truncate max-w-[280px]" title={l.destination}>{l.destination}</td>
@@ -124,6 +136,57 @@ export default function CreateLinkPage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
+              <div className="text-sm text-muted-foreground">
+                Hiển thị {startIndex + 1}-{Math.min(endIndex, links.length)} trong {links.length} links
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Trước
+                </Button>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "primary" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Sau
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

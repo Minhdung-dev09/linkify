@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import DashboardClient from "./DashboardClient";
+import ReportModal from "@/components/dashboard/ReportModal";
 
 export default async function DashboardPage() {
   const token = cookies().get("token")?.value;
@@ -13,9 +14,12 @@ export default async function DashboardPage() {
           <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Tổng quan hoạt động và liên kết của bạn</p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/links/create">Tạo liên kết mới</Link>
-        </Button>
+        <div className="flex items-center">
+          <Button asChild>
+            <Link href="/dashboard/links/create">Tạo liên kết mới</Link>
+          </Button>
+          <ReportModal />
+        </div>
       </div>
 
       <DashboardClient />
