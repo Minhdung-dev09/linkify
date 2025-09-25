@@ -100,6 +100,11 @@ export interface ApiLink {
   destination: string;
   clicks: number;
   createdAt: string;
+  active?: boolean;
+  isActive?: boolean;
+  expiresAt?: string | null;
+  passwordHash?: string;
+  password?: string;
 }
 
 export async function apiCreateLink(token: string, payload: { destination: string; slug?: string; password?: string; expiresAt?: string }) {
@@ -130,6 +135,43 @@ export async function apiListLinks(token: string) {
     throw new Error(msg);
   }
   return data as { links: ApiLink[] };
+}
+
+export async function apiUpdateLink(
+  token: string,
+  slug: string,
+  payload: { destination?: string; active?: boolean; isActive?: boolean; password?: string; expiresAt?: string }
+) {
+  const res = await fetch(`${getBaseUrl()}/api/links/${encodeURIComponent(slug)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      ...payload,
+      // Chuẩn hóa tên field cho backend
+      isActive: typeof payload.isActive === "boolean" ? payload.isActive : (typeof payload.active === "boolean" ? payload.active : undefined),
+    }),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const validationMsg = Array.isArray((data as any)?.errors) && (data as any).errors[0]?.msg;
+    const msg = validationMsg || (data as any)?.message || `Cập nhật link thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { link: ApiLink };
+}
+
+export async function apiDeleteLink(token: string, slug: string) {
+  const res = await fetch(`${getBaseUrl()}/api/links/${encodeURIComponent(slug)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({} as any));
+    const validationMsg = Array.isArray((data as any)?.errors) && (data as any).errors[0]?.msg;
+    const msg = validationMsg || (data as any)?.message || `Xóa link thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return { success: true } as const;
 }
 
 export async function apiAnalyticsSummary(token: string, params: { slug?: string; days?: number; granularity?: "hour" | "day" | "month" | "year" }) {
