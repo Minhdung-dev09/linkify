@@ -41,6 +41,8 @@ export default function DashboardClient() {
   const [dateTo, setDateTo] = useState("");
   const [selectedDevices, setSelectedDevices] = useState<string[]>(["desktop","mobile","tablet"]);
   const [rangePreset, setRangePreset] = useState<"1h" | "3h" | "24h" | "1m" | "1y">("24h");
+  const [currentPage, setCurrentPage] = useState(1);
+  const linksPerPage = 5;
 
   const token = getToken();
   const queryClient = useQueryClient();
@@ -62,6 +64,12 @@ export default function DashboardClient() {
       passwordPlain: l.password || "",
     }))
   ), [data]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(links.length / linksPerPage);
+  const startIndex = (currentPage - 1) * linksPerPage;
+  const endIndex = startIndex + linksPerPage;
+  const currentLinks = links.slice(startIndex, endIndex);
 
   const [granularity, setGranularity] = useState<"hour" | "day" | "month" | "year">("day");
   const [days, setDays] = useState<number>(14);
@@ -311,7 +319,7 @@ export default function DashboardClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {links.map((l) => (
+                  {currentLinks.map((l) => (
                     <tr key={l.id} className="border-t border-border/40">
                       <td className="py-2 pr-4">{`${shortBaseUrl}/${l.short}`}</td>
                       <td className="py-2 pr-4 truncate max-w-[220px]" title={l.destination}>{l.destination}</td>
@@ -359,6 +367,57 @@ export default function DashboardClient() {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
+                <div className="text-sm text-muted-foreground">
+                  Hiển thị {startIndex + 1}-{Math.min(endIndex, links.length)} trong {links.length} links
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Trước
+                  </Button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "primary" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Sau
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
