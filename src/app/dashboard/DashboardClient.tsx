@@ -87,6 +87,36 @@ export default function DashboardClient() {
     return base;
   }, [analytics]);
 
+  const platformBars = useMemo(() => {
+    const referrers: any[] = (analytics?.referrers as any[]) || [];
+    const toHost = (url: string) => {
+      try { return new URL(url).hostname.toLowerCase().replace(/^www\./, ""); } catch { return String(url || "").toLowerCase(); }
+    };
+    const toPlatform = (raw: string) => {
+      const h = toHost(raw);
+      if (h.includes("facebook") || h.includes("fb.")) return "Facebook";
+      if (h.includes("tiktok")) return "TikTok";
+      if (h.includes("instagram")) return "Instagram";
+      if (h.includes("twitter") || h === "x.com") return "Twitter/X";
+      if (h.includes("youtube") || h.includes("youtu.be")) return "YouTube";
+      if (h.includes("zalo")) return "Zalo";
+      if (h.includes("telegram")) return "Telegram";
+      if (h.includes("whatsapp")) return "WhatsApp";
+      if (h.includes("google") || h.includes("bing") || h.includes("yandex")) return "Search";
+      if (!h || h === "") return "Direct";
+      return "Other";
+    };
+    const map = new Map<string, number>();
+    for (const r of referrers) {
+      const p = toPlatform(r?.label || "");
+      map.set(p, (map.get(p) || 0) + Number(r?.value || 0));
+    }
+    const order = ["Facebook","TikTok","YouTube","Instagram","Twitter/X","Zalo","Telegram","WhatsApp","Search","Direct","Other"];
+    const arr = Array.from(map.entries()).map(([label,value])=>({ label, value }));
+    arr.sort((a,b)=> order.indexOf(a.label) - order.indexOf(b.label));
+    return arr;
+  }, [analytics]);
+
   const shortBaseUrl = useMemo(() => {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL as string | undefined;
     try {
@@ -151,6 +181,21 @@ export default function DashboardClient() {
       </CardContent>
     </Card>
   );
+
+  const formatUrl = (raw: string, maxLen = 34) => {
+    if (!raw) return "";
+    try {
+      const u = new URL(raw);
+      const host = (u.hostname || "").replace(/^www\./, "");
+      const base = `${u.protocol}//${host}`;
+      const path = (u.pathname + (u.search || "")).replace(/\/$/, "");
+      let display = base + (path && path !== "/" ? path : "");
+      if (display.length <= maxLen) return display;
+      return display.slice(0, 14) + "..." + display.slice(-10);
+    } catch (_) {
+      return raw.length <= maxLen ? raw : raw.slice(0, 14) + "..." + raw.slice(-10);
+    }
+  };
 
   return (
     <>
@@ -319,24 +364,28 @@ export default function DashboardClient() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Top Referrers</CardTitle>
+            <CardTitle className="text-lg">Top Destinations</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr className="text-left">
-                    <th className="py-2 pr-4">Nguồn</th>
+                    <th className="py-2 pr-4">Destination</th>
                     <th className="py-2 pr-4">Clicks</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(analytics?.referrers || []).map((r: any, idx: number) => (
-                    <tr key={idx} className="border-t border-border/40">
-                      <td className="py-2 pr-4 truncate max-w-[220px]" title={r.label || "(Direct)"}>{r.label || "(Direct)"}</td>
-                      <td className="py-2 pr-4">{r.value}</td>
-                    </tr>
-                  ))}
+                  {links
+                    .slice()
+                    .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+                    .slice(0, 10)
+                    .map((l) => (
+                      <tr key={l.id} className="border-t border-border/40">
+                        <td className="py-2 pr-4 truncate max-w-[260px]" title={l.destination}>{formatUrl(l.destination, 36)}</td>
+                        <td className="py-2 pr-4">{l.clicks}</td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -408,10 +457,20 @@ export default function DashboardClient() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Countries</CardTitle>
+            <CardTitle className="text-lg">Engagements by Platform</CardTitle>
           </CardHeader>
           <CardContent>
-            <BarChart data={analytics?.countries || []} />
+            <div className="h-[220px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RBarChart data={platformBars}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#22c55e" radius={[3,3,0,0]} />
+                </RBarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
         <Card>
