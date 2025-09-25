@@ -1,18 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "@/lib/auth";
-import { apiAnalyticsSummary, apiListLinks } from "@/lib/api";
+import { apiAnalyticsSummary, apiListLinks, apiUpdateLink, apiDeleteLink } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { MoreHorizontal, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { APP_DOMAIN } from "@/utils/constants/site";
 import LineChart from "@/components/charts/LineChart";
 import BarChart from "@/components/charts/BarChart";
 import PieChart from "@/components/charts/PieChart";
 import { mockTimeSeries } from "@/lib/mock";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface LinkItem {
   id: string;
@@ -20,12 +22,19 @@ interface LinkItem {
   destination: string;
   clicks: number;
   createdAt: string;
+  active?: boolean;
+  expiresAt?: string | null;
+  hasPassword?: boolean;
+  passwordPlain?: string;
 }
 
 export default function DashboardClient() {
   const [selectedLinkId, setSelectedLinkId] = useState<string>("all");
+  const [qrSlug, setQrSlug] = useState<string | null>(null);
+  const [showPw, setShowPw] = useState<Record<string, boolean>>({});
 
   const token = getToken();
+  const queryClient = useQueryClient();
   const { data } = useQuery({
     queryKey: ["links"],
     queryFn: async () => token ? apiListLinks(token) : { links: [] as any[] } as any,
@@ -37,6 +46,11 @@ export default function DashboardClient() {
       destination: l.destination,
       clicks: l.clicks,
       createdAt: new Date(l.createdAt).toLocaleDateString(),
+      // backend trả isActive; giữ backward-compat nếu có active
+      active: (typeof l.isActive === "boolean" ? l.isActive : l.active) !== false,
+      expiresAt: l.expiresAt || null,
+      hasPassword: !!l.passwordHash || !!l.password,
+      passwordPlain: l.password || "",
     }))
   ), [data]);
 
@@ -76,6 +90,30 @@ export default function DashboardClient() {
       toast.success("Đã copy link vào clipboard");
     } catch (_) {}
     document.body.removeChild(textarea);
+  };
+
+  const toggleActive = async (slug: string, currentActive: boolean | undefined) => {
+    if (!token) return;
+    const next = !currentActive;
+    try {
+      await apiUpdateLink(token, slug, { active: next });
+      await queryClient.invalidateQueries({ queryKey: ["links"] });
+      toast.success(next ? "Đã chuyển sang Hoạt động" : "Đã tạm dừng link");
+    } catch (e: any) {
+      toast.error(e?.message || "Cập nhật trạng thái thất bại");
+    }
+  };
+
+  const deleteLink = async (slug: string) => {
+    if (!token) return;
+    if (!confirm("Xóa link này?")) return;
+    try {
+      await apiDeleteLink(token, slug);
+      await queryClient.invalidateQueries({ queryKey: ["links"] });
+      toast.success("Đã xóa link");
+    } catch (e: any) {
+      toast.error(e?.message || "Xóa link thất bại");
+    }
   };
 
   const StatCard = ({ title, value, subtitle }: { title: string; value: string | number; subtitle?: string }) => (
@@ -148,6 +186,9 @@ export default function DashboardClient() {
                     <th className="py-2 pr-4">Short</th>
                     <th className="py-2 pr-4">Destination</th>
                     <th className="py-2 pr-4">Clicks</th>
+                    <th className="py-2 pr-4">Trạng thái</th>
+                    <th className="py-2 pr-4">Hết hạn</th>
+                    <th className="py-2 pr-4">Password</th>
                     <th className="py-2 pr-4">Created</th>
                     <th className="py-2">Actions</th>
                   </tr>
@@ -158,15 +199,43 @@ export default function DashboardClient() {
                       <td className="py-2 pr-4">{`${shortBaseUrl}/${l.short}`}</td>
                       <td className="py-2 pr-4 truncate max-w-[220px]" title={l.destination}>{l.destination}</td>
                       <td className="py-2 pr-4">{l.clicks}</td>
+                      <td className="py-2 pr-4">{l.active === false ? "Tạm dừng" : "Hoạt động"}</td>
+                      <td className="py-2 pr-4">{l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "—"}</td>
+                      <td className="py-2 pr-4">
+                        {l.hasPassword ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="select-all">
+                              {l.passwordPlain
+                                ? (showPw[l.short] ? l.passwordPlain : "•".repeat(Math.min(8, l.passwordPlain.length)))
+                                : "Ẩn"}
+                            </span>
+                            {l.passwordPlain ? (
+                              <button
+                                aria-label={showPw[l.short] ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-accent"
+                                onClick={(e) => { e.preventDefault(); setShowPw((s:any)=>({ ...s, [l.short]: !s?.[l.short] })); }}
+                              >
+                                {showPw[l.short] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            ) : null}
+                          </span>
+                        ) : "—"}
+                      </td>
                       <td className="py-2 pr-4">{l.createdAt}</td>
                       <td className="py-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard(`${shortBaseUrl}/${l.short}`)}
-                        >
-                          Copy
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => copyToClipboard(`${shortBaseUrl}/${l.short}`)}>Sao chép link</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setQrSlug(l.short)}>QR Code</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(`${shortBaseUrl}/${l.short}`, "_blank")}>Mở link</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast.info("Chức năng chỉnh sửa sẽ có sau")}>Chỉnh sửa</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleActive(l.short, l.active)}> {l.active === false ? "Hoạt động" : "Tạm dừng"}</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => deleteLink(l.short)}>Xóa link</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))}
@@ -185,6 +254,59 @@ export default function DashboardClient() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!qrSlug} onOpenChange={(open) => !open && setQrSlug(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>QR Code</DialogTitle>
+            <DialogDescription>Quét mã QR để mở link</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-3">
+            {qrSlug && (
+              <img
+                alt="QR"
+                className="rounded-md border"
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(`${shortBaseUrl}/${qrSlug}`)}`}
+              />
+            )}
+            {qrSlug && (
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => copyToClipboard(`${shortBaseUrl}/${qrSlug}`)}>Sao chép link</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const url = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(`${shortBaseUrl}/${qrSlug}`)}&t=${Date.now()}`;
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => {
+                      try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 240; canvas.height = 240;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return window.open(url, '_blank');
+                        ctx.drawImage(img, 0, 0, 240, 240);
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const a = document.createElement('a');
+                        a.href = dataUrl;
+                        a.download = `${qrSlug}-qr.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      } catch (_) {
+                        window.open(url, '_blank');
+                      }
+                    };
+                    img.onerror = () => window.open(url, '_blank');
+                    img.src = url;
+                  }}
+                >
+                  Tải xuống
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getToken } from "@/lib/auth";
 import { apiCreateLink, apiListLinks, type ApiLink } from "@/lib/api";
@@ -16,6 +17,7 @@ export default function CreateLinkPage() {
   const [slug, setSlug] = useState("");
   const [password, setPassword] = useState("");
   const [expiresAt, setExpiresAt] = useState<string>("");
+  const [showPw, setShowPw] = useState<Record<string, boolean>>({});
 
   const { data: list, refetch } = useQuery({
     queryKey: ["links"],
@@ -88,6 +90,9 @@ export default function CreateLinkPage() {
                   <th className="py-2 pr-4">Short</th>
                   <th className="py-2 pr-4">Destination</th>
                   <th className="py-2 pr-4">Clicks</th>
+                  <th className="py-2 pr-4">Trạng thái</th>
+                  <th className="py-2 pr-4">Hết hạn</th>
+                  <th className="py-2 pr-4">Password</th>
                   <th className="py-2 pr-4">Created</th>
                 </tr>
               </thead>
@@ -97,6 +102,22 @@ export default function CreateLinkPage() {
                     <td className="py-2 pr-4">{l.slug}</td>
                     <td className="py-2 pr-4 truncate max-w-[280px]" title={l.destination}>{l.destination}</td>
                     <td className="py-2 pr-4">{l.clicks}</td>
+                    <td className="py-2 pr-4">{(l as any).isActive === false ? "Tạm dừng" : "Hoạt động"}</td>
+                    <td className="py-2 pr-4">{l.expiresAt ? new Date(l.expiresAt as any).toLocaleDateString() : "—"}</td>
+                    <td className="py-2 pr-4">
+                      {(l as any).password ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="select-all">{showPw[l.slug] ? (l as any).password : "•".repeat(Math.min(8, (l as any).password.length))}</span>
+                          <button
+                            aria-label={showPw[l.slug] ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                            className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-accent"
+                            onClick={(e) => { e.preventDefault(); setShowPw((s)=>({ ...s, [l.slug]: !s[l.slug] })); }}
+                          >
+                            {showPw[l.slug] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </span>
+                      ) : ((l as any).passwordHash ? "Ẩn" : "Không")}
+                    </td>
                     <td className="py-2 pr-4">{new Date(l.createdAt).toLocaleString()}</td>
                   </tr>
                 ))}
