@@ -174,11 +174,12 @@ export async function apiDeleteLink(token: string, slug: string) {
   return { success: true } as const;
 }
 
-export async function apiAnalyticsSummary(token: string, params: { slug?: string; days?: number; granularity?: "hour" | "day" | "month" | "year" }) {
+export async function apiAnalyticsSummary(token: string, params: { slug?: string; days?: number; granularity?: "hour" | "day" | "month" | "year"; devices?: string[] }) {
   const query = new URLSearchParams();
   if (params.slug) query.set("slug", params.slug);
   if (params.days) query.set("days", String(params.days));
   if (params.granularity) query.set("granularity", params.granularity);
+  if (params.devices && params.devices.length) query.set("devices", params.devices.join(","));
   const res = await fetch(`${getBaseUrl()}/api/links/analytics/summary?${query.toString()}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
