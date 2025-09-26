@@ -30,7 +30,7 @@ const SignUpForm = () => {
             setEmailError("");
             setToken(data.token);
             toast.success("Đăng ký thành công");
-            router.push("/dashboard");
+            router.push("/");
         },
         onError: (error: any) => {
             toast.error(error?.message || "Đăng ký thất bại");
