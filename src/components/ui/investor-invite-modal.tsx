@@ -132,7 +132,7 @@ const InvestorInviteModal = ({ open, onOpenChange }: InvestorInviteModalProps) =
             <DialogContent className="w-full max-w-sm">
               <DialogHeader>
                 <DialogTitle className="text-lg font-semibold">Mã QR chuyển khoản</DialogTitle>
-                <p className="text-sm text-red-300 italic">Chúng tôi sẽ tự động lưu lại thông tin của bạn và sẽ chủ động liên lạc qua email ngay khi nhận được hỗ trợ động viên.</p>
+                <p className="text-sm text-red-300 italic">Hệ thống sẽ tự động lưu lại thông tin và sẽ chủ động liên lạc qua email ngay khi nhận được đóng góp của bạn.</p>
               </DialogHeader>
               <div className="w-full flex items-center justify-center py-2">
                 <img src="/taikhoannganhang.jpg" alt="QR chuyển khoản" className="w-64 h-64 object-contain rounded-md border border-border bg-white" />
