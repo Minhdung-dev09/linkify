@@ -14,14 +14,15 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn, NAV_LINKS, DEFAULT_AVATAR_URL } from "@/utils";
 import { clearToken, getToken } from "@/lib/auth";
-import { apiMe } from "@/lib/api";
-import { LucideIcon, ZapIcon } from "lucide-react";
+import { apiMe, apiListNotifications, apiReadAllNotifications } from "@/lib/api";
+import { LucideIcon, ZapIcon, Bell } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from 'react';
 import MaxWidthWrapper from "../global/max-width-wrapper";
 import MobileNavbar from "./mobile-navbar";
 import AnimationContainer from "../global/animation-container";
 import PricingModal from "../ui/pricing-modal";
+import ChangePasswordModal from "../ui/ChangePasswordModal";
 
 const Navbar = () => {
 
@@ -31,6 +32,18 @@ const Navbar = () => {
     const [userEmail, setUserEmail] = useState<string>("");
     const [avatarUrl, setAvatarUrl] = useState<string>("");
     const [pricingModalOpen, setPricingModalOpen] = useState(false);
+    const [changePwOpen, setChangePwOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Array<{ id: string; title: string; createdAt: string; readAt?: string | null }>>([]);
+    const hasUnread = notifications.some(n => !n.readAt);
+
+    const handleOpenNotifications = async (open: boolean) => {
+        if (!open) return;
+        try {
+            const token = getToken();
+            if (token) await apiReadAllNotifications(token);
+        } catch {}
+        setNotifications(prev => prev.map(n => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+    };
 
     const handleScroll = () => {
         if (window.scrollY > 8) {
@@ -89,6 +102,19 @@ const Navbar = () => {
         } catch {}
       })();
     }, []);
+
+    useEffect(() => {
+      // fetch notifications when signed in
+      (async () => {
+        try {
+          const token = getToken();
+          if (!token) return;
+          const res = await apiListNotifications(token);
+          const list = (res?.notifications || []).map((n: any) => ({ id: String(n._id || n.id), title: n.title, createdAt: n.createdAt, readAt: n.readAt }));
+          setNotifications(list);
+        } catch {}
+      })();
+    }, [hasToken]);
 
     return (
         <header className={cn(
@@ -173,6 +199,28 @@ const Navbar = () => {
                     <div className="hidden lg:flex items-center">
                         {hasToken ? (
                             <div className="flex items-center gap-x-3">
+                                {/* Notifications */}
+                                <DropdownMenu onOpenChange={handleOpenNotifications}>
+                                    <DropdownMenuTrigger asChild>
+                                        <button aria-label="Notifications" className="relative h-9 w-9 rounded-full flex items-center justify-center hover:bg-accent">
+                                            {hasUnread && (<span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background animate-pulse" />)}
+                                            <Bell className={cn("h-4 w-4", hasUnread && "animate-bounce")} />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="min-w-64">
+                                        <div className="px-3 py-2 text-sm font-medium">Thông báo</div>
+                                        {notifications.length === 0 ? (
+                                            <div className="px-3 py-2 text-sm text-muted-foreground">Không có thông báo</div>
+                                        ) : (
+                                            notifications.map(n => (
+                                                <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5">
+                                                    <span className="text-sm">{n.title}</span>
+                                                    <span className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</span>
+                                                </DropdownMenuItem>
+                                            ))
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <button className="flex items-center gap-2 rounded-full focus:outline-none">
@@ -191,6 +239,9 @@ const Navbar = () => {
                                         )}
                                         <DropdownMenuItem asChild>
                                             <Link href="/dashboard">Dashboard</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setChangePwOpen(true)}>
+                                            Đổi mật khẩu
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => { clearToken(); window.location.href = "/"; }}>
                                             Sign out
@@ -217,6 +268,7 @@ const Navbar = () => {
             </AnimationContainer>
             
             <PricingModal open={pricingModalOpen} onOpenChange={setPricingModalOpen} />
+            <ChangePasswordModal open={changePwOpen} onOpenChange={setChangePwOpen} />
         </header>
     )
 };

@@ -26,7 +26,7 @@ const SignInForm = () => {
         onSuccess: (data) => {
             setToken(data.token);
             toast.success("Đăng nhập thành công");
-            router.push("/dashboard");
+            router.push("/");
         },
         onError: (error: any) => {
             toast.error(error?.message || "Đăng nhập thất bại");

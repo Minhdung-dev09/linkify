@@ -14,6 +14,7 @@ import BarChart from "@/components/charts/BarChart";
 import PieChart from "@/components/charts/PieChart";
 import { mockTimeSeries } from "@/lib/mock";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import ShareModal from "@/components/dashboard/ShareModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +37,7 @@ export default function DashboardClient() {
   const [selectedLinkId, setSelectedLinkId] = useState<string>("all");
   const [qrSlug, setQrSlug] = useState<string | null>(null);
   const [showPw, setShowPw] = useState<Record<string, boolean>>({});
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -93,6 +95,11 @@ export default function DashboardClient() {
       }
     }
     return base;
+  }, [analytics]);
+
+  const clicksSeries = useMemo(() => {
+    const src: any[] = (analytics?.clicksOverTime as any[]) || [];
+    return src.map((d: any) => ({ label: String(d?.label || ''), value: Number(d?.value || 0) }));
   }, [analytics]);
 
   const platformBars = useMemo(() => {
@@ -356,6 +363,7 @@ export default function DashboardClient() {
                             <DropdownMenuItem onClick={() => copyToClipboard(`${shortBaseUrl}/${l.short}`)}>Sao chép link</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setQrSlug(l.short)}>QR Code</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => window.open(`${shortBaseUrl}/${l.short}`, "_blank")}>Mở link</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setShareUrl(`${shortBaseUrl}/${l.short}`)}>Chia sẻ</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toast.info("Chức năng chỉnh sửa sẽ có sau")}>Chỉnh sửa</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleActive(l.short, l.active)}> {l.active === false ? "Hoạt động" : "Tạm dừng"}</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => deleteLink(l.short)}>Xóa link</DropdownMenuItem>
@@ -452,6 +460,8 @@ export default function DashboardClient() {
         </Card>
       </div>
 
+      <ShareModal open={!!shareUrl} onOpenChange={(o)=>!o && setShareUrl(null)} url={shareUrl} title="Chia sẻ liên kết" text="Xem link này trên Linkify" />
+
       <Dialog open={!!qrSlug} onOpenChange={(open) => !open && setQrSlug(null)}>
         <DialogContent>
           <DialogHeader>
@@ -535,20 +545,26 @@ export default function DashboardClient() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Phân bố theo thời gian</CardTitle>
+              <CardTitle className="text-lg">Clicks theo thời gian</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="h-[220px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RBarChart data={hourlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#22c55e" radius={[3,3,0,0]} />
-                </RBarChart>
-              </ResponsiveContainer>
+              {clicksSeries.length ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={clicksSeries}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="value" stroke="#22c55e" fill="#22c55e22" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+                  Đang tải dữ liệu...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
