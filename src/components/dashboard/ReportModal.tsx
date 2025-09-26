@@ -124,7 +124,7 @@ const ReportModal = () => {
         if (remaining > 0) pdf.addPage();
       }
     }
-    pdf.save("bao-cao-linkify.pdf");
+    pdf.save("bao-cao-ccme-shortlink.pdf");
   };
 
   return (

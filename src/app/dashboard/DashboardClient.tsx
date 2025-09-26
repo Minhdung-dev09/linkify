@@ -215,10 +215,10 @@ export default function DashboardClient() {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Tổng số link" value={analytics?.totals?.totalLinks ?? "—"} subtitle="Số link đã tạo" />
-        <StatCard title="Tổng lượt click" value={analytics?.totals?.totalClicks ?? "—"} subtitle={`Trong ${days} ngày"`} />
-        <StatCard title="Người dùng duy nhất" value={analytics?.totals?.uniqueVisitors ?? "—"} subtitle="Unique visitors" />
-        <StatCard title="CTR trung bình" value={analytics?.totals?.ctr != null ? `${analytics?.totals?.ctr}%` : "—"} subtitle="Click-through rate" />
+        <StatCard title="Tổng số liên kết" value={analytics?.totals?.totalLinks ?? "—"} subtitle="Số liên kết đã tạo" />
+        <StatCard title="Tổng lượt nhấp" value={analytics?.totals?.totalClicks ?? "—"} subtitle={`Trong ${days} ngày`} />
+        <StatCard title="Người truy cập duy nhất" value={analytics?.totals?.uniqueVisitors ?? "—"} subtitle="Số người dùng khác nhau" />
+        <StatCard title="CTR trung bình" value={analytics?.totals?.ctr != null ? `${analytics?.totals?.ctr}%` : "—"} subtitle="Tỷ lệ click" />
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 py-1">
@@ -308,21 +308,21 @@ export default function DashboardClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-lg">Recent Links</CardTitle>
+            <CardTitle className="text-lg">Liên kết gần đây</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr className="text-left">
-                    <th className="py-2 pr-4">Short</th>
-                    <th className="py-2 pr-4">Destination</th>
-                    <th className="py-2 pr-4">Clicks</th>
+                    <th className="py-2 pr-4">Rút gọn</th>
+                    <th className="py-2 pr-4">Đích đến</th>
+                    <th className="py-2 pr-4">Lượt click</th>
                     <th className="py-2 pr-4">Trạng thái</th>
                     <th className="py-2 pr-4">Hết hạn</th>
-                    <th className="py-2 pr-4">Password</th>
-                    <th className="py-2 pr-4">Created</th>
-                    <th className="py-2">Actions</th>
+                    <th className="py-2 pr-4">Mật khẩu</th>
+                    <th className="py-2 pr-4">Thời gian tạo </th>
+                    <th className="py-2">Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -332,7 +332,7 @@ export default function DashboardClient() {
                       <td className="py-2 pr-4 truncate max-w-[220px]" title={l.destination}>{l.destination}</td>
                       <td className="py-2 pr-4">{l.clicks}</td>
                       <td className="py-2 pr-4">{l.active === false ? "Tạm dừng" : "Hoạt động"}</td>
-                      <td className="py-2 pr-4">{l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : "—"}</td>
+                      <td className="py-2 pr-4">{l.expiresAt ? new Date(l.expiresAt).toLocaleString() : "—"}</td>
                       <td className="py-2 pr-4">
                         {l.hasPassword ? (
                           <span className="inline-flex items-center gap-2">
@@ -379,7 +379,7 @@ export default function DashboardClient() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
                 <div className="text-sm text-muted-foreground">
-                  Hiển thị {startIndex + 1}-{Math.min(endIndex, links.length)} trong {links.length} links
+                  Hiển thị {startIndex + 1}-{Math.min(endIndex, links.length)} trong {links.length} liên kết
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -431,15 +431,15 @@ export default function DashboardClient() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Top Destinations</CardTitle>
+            <CardTitle className="text-lg">Đích đến nổi bật</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr className="text-left">
-                    <th className="py-2 pr-4">Destination</th>
-                    <th className="py-2 pr-4">Clicks</th>
+                    <th className="py-2 pr-4">Đích đến</th>
+                    <th className="py-2 pr-4">Lượt click</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -460,13 +460,13 @@ export default function DashboardClient() {
         </Card>
       </div>
 
-      <ShareModal open={!!shareUrl} onOpenChange={(o)=>!o && setShareUrl(null)} url={shareUrl} title="Chia sẻ liên kết" text="Xem link này trên Linkify" />
+      <ShareModal open={!!shareUrl} onOpenChange={(o)=>!o && setShareUrl(null)} url={shareUrl} title="Chia sẻ liên kết" text="Xem link này trên ccme-shortlink" />
 
       <Dialog open={!!qrSlug} onOpenChange={(open) => !open && setQrSlug(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>QR Code</DialogTitle>
-            <DialogDescription>Quét mã QR để mở link</DialogDescription>
+            <DialogTitle>Mã QR</DialogTitle>
+            <DialogDescription>Quét mã để mở liên kết</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-3">
             {qrSlug && (
@@ -478,7 +478,7 @@ export default function DashboardClient() {
             )}
             {qrSlug && (
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => copyToClipboard(`${shortBaseUrl}/${qrSlug}`)}>Sao chép link</Button>
+                <Button variant="outline" onClick={() => copyToClipboard(`${shortBaseUrl}/${qrSlug}`)}>Sao chép liên kết</Button>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -518,7 +518,7 @@ export default function DashboardClient() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Devices</CardTitle>
+            <CardTitle className="text-lg">Thiết bị</CardTitle>
           </CardHeader>
           <CardContent>
             <BarChart data={analytics?.devices || []} />
@@ -526,7 +526,7 @@ export default function DashboardClient() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Engagements by Platform</CardTitle>
+            <CardTitle className="text-lg">Tương tác theo nền tảng</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[220px]">

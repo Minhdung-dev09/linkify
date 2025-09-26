@@ -81,6 +81,7 @@ export default function CreateLinkPage() {
           <div>
             <Label>Hết hạn (tùy chọn)</Label>
             <Input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1">Sau thời điểm này, liên kết sẽ tự động tạm dừng.</p>
           </div>
           <div className="md:col-span-2">
             <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !destination}>

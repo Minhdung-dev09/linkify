@@ -20,6 +20,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from 'react';
 import PricingModal from "../ui/pricing-modal";
 import ChangePasswordModal from "../ui/ChangePasswordModal";
+import InvestorInviteModal from "../ui/investor-invite-modal";
 
 const MobileNavbar = () => {
 
@@ -27,6 +28,7 @@ const MobileNavbar = () => {
 
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [pricingModalOpen, setPricingModalOpen] = useState(false);
+    const [investorOpen, setInvestorOpen] = useState(false);
     const [changePwOpen, setChangePwOpen] = useState(false);
     const [userEmail, setUserEmail] = useState<string>("");
 
@@ -120,7 +122,17 @@ const MobileNavbar = () => {
                                                 </AccordionContent>
                                             </>
                                         ) : (
-                                            link.isModal ? (
+                                            link.openInvestorModal ? (
+                                                <button
+                                                    onClick={() => {
+                                                        setInvestorOpen(true);
+                                                        handleClose();
+                                                    }}
+                                                    className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <span>{link.title}</span>
+                                                </button>
+                                            ) : link.isModal ? (
                                                 <button
                                                     onClick={() => {
                                                         setPricingModalOpen(true);
@@ -149,6 +161,7 @@ const MobileNavbar = () => {
             </Sheet>
             
             <PricingModal open={pricingModalOpen} onOpenChange={setPricingModalOpen} />
+            <InvestorInviteModal open={investorOpen} onOpenChange={setInvestorOpen} />
             <ChangePasswordModal open={changePwOpen} onOpenChange={setChangePwOpen} />
         </div>
     )
