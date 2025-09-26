@@ -94,6 +94,21 @@ export async function apiMe(token: string): Promise<{ user: ApiUser }>{
   return res.json();
 }
 
+export async function apiChangePassword(token: string, payload: { currentPassword: string; newPassword: string }): Promise<{ message: string }>{
+  const res = await fetch(`${getBaseUrl()}/api/auth/change-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const validationMsg = Array.isArray((data as any)?.errors) && (data as any).errors[0]?.msg;
+    const msg = validationMsg || (data as any)?.message || `Đổi mật khẩu thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { message: string };
+}
+
 // Links
 export interface ApiLink {
   slug: string;
@@ -192,6 +207,36 @@ export async function apiAnalyticsSummary(token: string, params: { slug?: string
     throw new Error(msg);
   }
   return data as { clicksOverTime: { label: string; value: number }[]; devices: any[]; countries: any[]; referrers: any[]; totals: any };
+}
+
+// Notifications
+export async function apiListNotifications(token: string): Promise<{ notifications: Array<{ id: string; title: string; message?: string; type?: string; createdAt: string; readAt?: string | null }> }>{
+  const res = await fetch(`${getBaseUrl()}/api/notifications`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const validationMsg = Array.isArray((data as any)?.errors) && (data as any).errors[0]?.msg;
+    const msg = validationMsg || (data as any)?.message || `Lấy thông báo thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiReadAllNotifications(token: string): Promise<{ success: boolean }>{
+  const res = await fetch(`${getBaseUrl()}/api/notifications/read-all`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const validationMsg = Array.isArray((data as any)?.errors) && (data as any).errors[0]?.msg;
+    const msg = validationMsg || (data as any)?.message || `Cập nhật thông báo thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { success: boolean };
 }
 
 
