@@ -362,4 +362,144 @@ export async function apiAdminUsersForNotification(token: string): Promise<{ use
   return data;
 }
 
+// Feedback APIs
+export interface Feedback {
+  _id: string;
+  name: string;
+  email: string;
+  rating: number;
+  category: 'ui_ux' | 'performance' | 'feature' | 'bug' | 'suggestion' | 'other';
+  subject: string;
+  message: string;
+  status: 'new' | 'reviewed' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  adminNotes: string;
+  thankYouMessage: string;
+  thankYouSent: boolean;
+  thankYouSentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedbackStats {
+  overview: {
+    totalFeedbacks: number;
+    recentFeedbacks: number;
+    unthankedCount: number;
+  };
+  statusStats: Array<{ _id: string; count: number }>;
+  categoryStats: Array<{ _id: string; count: number }>;
+  priorityStats: Array<{ _id: string; count: number }>;
+  ratingStats: Array<{ _id: number; count: number }>;
+  dailyStats: Array<{ _id: string; count: number }>;
+}
+
+export async function apiCreateFeedback(payload: { 
+  name: string; 
+  email: string; 
+  rating: number; 
+  category: string; 
+  subject: string; 
+  message: string; 
+}): Promise<{ success: boolean; message: string; feedback: Feedback }> {
+  const res = await fetch(`${getBaseUrl()}/api/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Gửi feedback thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminFeedbacks(token: string, params: { 
+  page?: number; 
+  limit?: number; 
+  search?: string; 
+  status?: string; 
+  category?: string; 
+  priority?: string; 
+} = {}): Promise<{ feedbacks: Feedback[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.search) query.set("search", params.search);
+  if (params.status) query.set("status", params.status);
+  if (params.category) query.set("category", params.category);
+  if (params.priority) query.set("priority", params.priority);
+  
+  const res = await fetch(`${getBaseUrl()}/api/feedback/admin?${query.toString()}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy danh sách feedback thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminFeedbackStats(token: string): Promise<FeedbackStats> {
+  const res = await fetch(`${getBaseUrl()}/api/feedback/admin/stats`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy thống kê feedback thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as FeedbackStats;
+}
+
+export async function apiAdminUpdateFeedback(token: string, feedbackId: string, payload: { 
+  status?: string; 
+  priority?: string; 
+  adminNotes?: string; 
+  thankYouMessage?: string; 
+}): Promise<{ feedback: Feedback }> {
+  const res = await fetch(`${getBaseUrl()}/api/feedback/admin/${feedbackId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Cập nhật feedback thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminSendThankYou(token: string, feedbackId: string, payload: { thankYouMessage: string }): Promise<{ success: boolean; message: string; feedback: Feedback }> {
+  const res = await fetch(`${getBaseUrl()}/api/feedback/admin/${feedbackId}/thank`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Gửi lời cảm ơn thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminDeleteFeedback(token: string, feedbackId: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${getBaseUrl()}/api/feedback/admin/${feedbackId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Xóa feedback thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
 

@@ -2,6 +2,7 @@
 
 import { buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     NavigationMenu,
@@ -36,7 +37,15 @@ const Navbar = () => {
     const [pricingModalOpen, setPricingModalOpen] = useState(false);
     const [changePwOpen, setChangePwOpen] = useState(false);
     const [investorOpen, setInvestorOpen] = useState(false);
-    const [notifications, setNotifications] = useState<Array<{ id: string; title: string; createdAt: string; readAt?: string | null }>>([]);
+    const [notifications, setNotifications] = useState<Array<{ 
+        id: string; 
+        title: string; 
+        message?: string;
+        meta?: any;
+        createdAt: string; 
+        readAt?: string | null 
+    }>>([]);
+    const [selectedNotification, setSelectedNotification] = useState<any>(null);
     const hasUnread = notifications.some(n => !n.readAt);
 
     const handleOpenNotifications = async (open: boolean) => {
@@ -115,7 +124,14 @@ const Navbar = () => {
           const token = getToken();
           if (!token) return;
           const res = await apiListNotifications(token);
-          const list = (res?.notifications || []).map((n: any) => ({ id: String(n._id || n.id), title: n.title, createdAt: n.createdAt, readAt: n.readAt }));
+          const list = (res?.notifications || []).map((n: any) => ({ 
+            id: String(n._id || n.id), 
+            title: n.title, 
+            message: n.message,
+            meta: n.meta,
+            createdAt: n.createdAt, 
+            readAt: n.readAt 
+          }));
           setNotifications(list);
         } catch {}
       })();
@@ -226,7 +242,11 @@ const Navbar = () => {
                                                 <div className="px-3 py-2 text-sm text-muted-foreground">Không có thông báo</div>
                                             ) : (
                                                 notifications.map(n => (
-                                                    <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5">
+                                                    <DropdownMenuItem 
+                                                        key={n.id} 
+                                                        className="flex flex-col items-start gap-0.5 cursor-pointer"
+                                                        onClick={() => setSelectedNotification(n)}
+                                                    >
                                                         <span className="text-sm font-medium">{n.title}</span>
                                                         <span className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</span>
                                                     </DropdownMenuItem>
@@ -292,6 +312,32 @@ const Navbar = () => {
             <PricingModal open={pricingModalOpen} onOpenChange={setPricingModalOpen} />
             <InvestorInviteModal open={investorOpen} onOpenChange={setInvestorOpen} />
             <ChangePasswordModal open={changePwOpen} onOpenChange={setChangePwOpen} />
+            
+            {/* Notification Detail Dialog */}
+            <Dialog open={!!selectedNotification} onOpenChange={() => setSelectedNotification(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{selectedNotification?.title}</DialogTitle>
+                        <DialogDescription>
+                            {new Date(selectedNotification?.createdAt).toLocaleString()}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        {selectedNotification?.message && (
+                            <div className="p-4 bg-muted rounded-lg">
+                                <p className="text-sm whitespace-pre-wrap">{selectedNotification.message}</p>
+                            </div>
+                        )}
+                        {selectedNotification?.meta?.type === 'thank_you' && (
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-sm text-green-800">
+                                    <strong>Chủ đề góp ý:</strong> {selectedNotification.meta.originalSubject}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </header>
     )
 };

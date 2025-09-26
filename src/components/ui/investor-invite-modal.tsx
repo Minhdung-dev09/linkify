@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { cn } from "@/utils";
+import FeedbackForm from "./feedback-form";
 
 interface InvestorInviteModalProps {
   open: boolean;
@@ -38,55 +39,8 @@ const InvestorInviteModal = ({ open, onOpenChange }: InvestorInviteModalProps) =
               </DialogHeader>
             </div>
             <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5">
-              <div className="max-w-[560px] mx-auto space-y-5">
-                <div>
-                  <label className="text-sm font-medium">Tên / Tổ chức (không bắt buộc)</label>
-                  <Input placeholder="Nhập tên hoặc tổ chức" className="mt-2" />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Bạn đang đánh giá vai trò nào?</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
-                    <Button variant="outline" className="justify-start">Nhà đầu tư</Button>
-                    <Button variant="outline" className="justify-start">Beta User</Button>
-                    <Button variant="outline" className="justify-start">Khác</Button>
-                  </div>
-                  <Input placeholder="Nếu chọn Khác, nhập ở đây" className="mt-2" />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Tính năng hiện tại bạn thấy ổn nhất</label>
-                  <Input placeholder="Nhập tính năng mày thích" className="mt-2" />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Tính năng còn thiếu / cần cải thiện</label>
-                  <Textarea placeholder="Nhập góp ý" className="mt-2" rows={3} />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Tính năng bạn muốn có trong tương lai</label>
-                  <Textarea placeholder="Nhập mong muốn" className="mt-2" rows={3} />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Ý kiến hoặc góp ý thêm (nếu có)</label>
-                  <Textarea placeholder="Viết bất cứ điều gì bạn muốn chia sẻ" className="mt-2" rows={4} />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Checkbox id="contact" checked={wantsContact} onCheckedChange={(v) => setWantsContact(!!v)} />
-                  <label htmlFor="contact" className="text-sm">Bạn có muốn chung tôi liên hệ để trao đổi thêm không?</label>
-                </div>
-
-                {wantsContact && (
-                  <Input placeholder="Email/Số điện thoại để liên hệ" />
-                )}
-
-                <div className="pt-2 flex gap-3">
-                  <Button className="px-5">Gửi góp ý</Button>
-                  <Button variant="ghost" className="px-5" onClick={() => onOpenChange(false)}>Đóng</Button>
-                </div>
+              <div className="max-w-[560px] mx-auto">
+                <FeedbackForm />
               </div>
             </div>
           </div>
