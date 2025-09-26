@@ -13,9 +13,9 @@ import {
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn, NAV_LINKS, DEFAULT_AVATAR_URL } from "@/utils";
-import { clearToken, getToken } from "@/lib/auth";
+import { clearToken, getToken, getUser } from "@/lib/auth";
 import { apiMe, apiListNotifications, apiReadAllNotifications } from "@/lib/api";
-import { LucideIcon, ZapIcon, Bell } from "lucide-react";
+import { LucideIcon, ZapIcon, Bell, Shield } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from 'react';
 import MaxWidthWrapper from "../global/max-width-wrapper";
@@ -32,6 +32,7 @@ const Navbar = () => {
     const [userName, setUserName] = useState<string>("");
     const [userEmail, setUserEmail] = useState<string>("");
     const [avatarUrl, setAvatarUrl] = useState<string>("");
+    const [isAdmin, setIsAdmin] = useState(false);
     const [pricingModalOpen, setPricingModalOpen] = useState(false);
     const [changePwOpen, setChangePwOpen] = useState(false);
     const [investorOpen, setInvestorOpen] = useState(false);
@@ -72,6 +73,7 @@ const Navbar = () => {
                             setUserName(u?.name || "");
                             setUserEmail(u?.email || "");
                             setAvatarUrl(u?.avatarUrl || "");
+                            setIsAdmin(u?.isAdmin || false);
                         }
                     } catch {}
                 }
@@ -101,6 +103,7 @@ const Navbar = () => {
           setUserName(u?.name || "");
           setUserEmail(u?.email || "");
           setAvatarUrl(u?.avatarUrl || "");
+          setIsAdmin(u?.isAdmin || false);
         } catch {}
       })();
     }, []);
@@ -216,18 +219,20 @@ const Navbar = () => {
                                             <Bell className={cn("h-4 w-4", hasUnread && "animate-bounce")} />
                                         </button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="min-w-64">
+                                    <DropdownMenuContent align="end" className="min-w-64 max-h-64">
                                         <div className="px-3 py-2 text-sm font-medium">Thông báo</div>
-                                        {notifications.length === 0 ? (
-                                            <div className="px-3 py-2 text-sm text-muted-foreground">Không có thông báo</div>
-                                        ) : (
-                                            notifications.map(n => (
-                                                <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5">
-                                                    <span className="text-sm">{n.title}</span>
-                                                    <span className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</span>
-                                                </DropdownMenuItem>
-                                            ))
-                                        )}
+                                        <div className="max-h-64 overflow-y-auto">
+                                            {notifications.length === 0 ? (
+                                                <div className="px-3 py-2 text-sm text-muted-foreground">Không có thông báo</div>
+                                            ) : (
+                                                notifications.map(n => (
+                                                    <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5">
+                                                        <span className="text-sm font-medium">{n.title}</span>
+                                                        <span className="text-xs text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</span>
+                                                    </DropdownMenuItem>
+                                                ))
+                                            )}
+                                        </div>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                                 <DropdownMenu>
@@ -249,6 +254,14 @@ const Navbar = () => {
                                         <DropdownMenuItem asChild>
                                             <Link href="/dashboard">Bảng điều khiển</Link>
                                         </DropdownMenuItem>
+                                        {isAdmin && (
+                                            <DropdownMenuItem asChild>
+                                                <Link href="/admin" className="flex items-center gap-2">
+                                                    <Shield className="h-4 w-4" />
+                                                    Admin Dashboard
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        )}
                                         <DropdownMenuItem onClick={() => setChangePwOpen(true)}>
                                             Đổi mật khẩu
                                         </DropdownMenuItem>

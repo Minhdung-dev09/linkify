@@ -14,7 +14,7 @@ import {
     SheetTrigger
 } from "@/components/ui/sheet";
 import { cn, NAV_LINKS } from "@/utils";
-import { clearToken } from "@/lib/auth";
+import { clearToken, getUser } from "@/lib/auth";
 import { LucideIcon, Menu, X } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from 'react';
@@ -31,6 +31,7 @@ const MobileNavbar = () => {
     const [investorOpen, setInvestorOpen] = useState(false);
     const [changePwOpen, setChangePwOpen] = useState(false);
     const [userEmail, setUserEmail] = useState<string>("");
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         try {
@@ -38,6 +39,7 @@ const MobileNavbar = () => {
             if (raw) {
                 const u = JSON.parse(raw || "{}");
                 setUserEmail(u?.email || "");
+                setIsAdmin(u?.isAdmin || false);
             }
         } catch {}
     }, [isOpen]);
@@ -73,6 +75,11 @@ const MobileNavbar = () => {
                                     <Link href="/dashboard" className={buttonVariants({ variant: "outline", className: "w-full" })}>
                                         Dashboard
                                     </Link>
+                                    {isAdmin && (
+                                        <Link href="/admin" className={buttonVariants({ variant: "outline", className: "w-full" })}>
+                                            Admin
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={() => { setChangePwOpen(true); }}
                                         className={buttonVariants({ variant: "ghost", className: "w-full" })}

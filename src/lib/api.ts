@@ -4,6 +4,7 @@ export interface ApiUser {
   name?: string;
   avatarUrl?: string;
   isVerified?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface AuthResponse {
@@ -237,6 +238,128 @@ export async function apiReadAllNotifications(token: string): Promise<{ success:
     throw new Error(msg);
   }
   return data as { success: boolean };
+}
+
+// Admin APIs
+export interface AdminStats {
+  overview: {
+    totalUsers: number;
+    totalLinks: number;
+    totalClicks: number;
+    activeUsers: number;
+    adminUsers: number;
+    newUsers: number;
+    newLinks: number;
+    newClicks: number;
+  };
+  topUsers: Array<{
+    _id: string;
+    name?: string;
+    email: string;
+    linkCount: number;
+    createdAt: string;
+  }>;
+  dailyStats: {
+    users: Array<{ _id: string; users: number }>;
+    links: Array<{ _id: string; links: number }>;
+    clicks: Array<{ _id: string; clicks: number }>;
+  };
+}
+
+export interface AdminUser {
+  _id: string;
+  name?: string;
+  email: string;
+  isVerified: boolean;
+  isAdmin: boolean;
+  createdAt: string;
+  linkCount: number;
+  clickCount: number;
+}
+
+export async function apiAdminStats(token: string): Promise<AdminStats> {
+  const res = await fetch(`${getBaseUrl()}/api/admin/stats`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy thống kê admin thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as AdminStats;
+}
+
+export async function apiAdminUsers(token: string, params: { page?: number; limit?: number; search?: string } = {}): Promise<{ users: AdminUser[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.search) query.set("search", params.search);
+  
+  const res = await fetch(`${getBaseUrl()}/api/admin/users?${query.toString()}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy danh sách users thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminUpdateUser(token: string, userId: string, payload: { name?: string; email?: string; isAdmin?: boolean; isVerified?: boolean; newPassword?: string }): Promise<{ user: AdminUser }> {
+  const res = await fetch(`${getBaseUrl()}/api/admin/users/${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Cập nhật user thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminDeleteUser(token: string, userId: string): Promise<{ success: boolean }> {
+  const res = await fetch(`${getBaseUrl()}/api/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Xóa user thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminSendNotification(token: string, payload: { title: string; message: string; targetUsers?: string[] | "all" }): Promise<{ success: boolean }> {
+  const res = await fetch(`${getBaseUrl()}/api/admin/notifications`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Gửi thông báo thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function apiAdminUsersForNotification(token: string): Promise<{ users: Array<{ _id: string; name?: string; email: string }> }> {
+  const res = await fetch(`${getBaseUrl()}/api/admin/users-for-notification`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy danh sách users cho thông báo thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
 }
 
 
