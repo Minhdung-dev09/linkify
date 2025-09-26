@@ -291,7 +291,7 @@ export default function AdminUsersPage() {
                             <DialogHeader>
                               <DialogTitle>Xác nhận xóa</DialogTitle>
                               <DialogDescription>
-                                Bạn có chắc chắn muốn xóa user "{user.name || user.email}"? 
+                                Bạn có chắc chắn muốn xóa user &quot;{user.name || user.email}&quot;? 
                                 Hành động này sẽ xóa tất cả links và dữ liệu liên quan.
                               </DialogDescription>
                             </DialogHeader>

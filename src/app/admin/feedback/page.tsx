@@ -561,7 +561,7 @@ export default function AdminFeedbackPage() {
                             <DialogHeader>
                               <DialogTitle>Xác nhận xóa</DialogTitle>
                               <DialogDescription>
-                                Bạn có chắc chắn muốn xóa feedback từ "{feedback.name}"? 
+                                Bạn có chắc chắn muốn xóa feedback từ &quot;{feedback.name}&quot;? 
                                 Hành động này không thể hoàn tác.
                               </DialogDescription>
                             </DialogHeader>
