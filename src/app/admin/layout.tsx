@@ -15,7 +15,8 @@ import {
   Settings,
   LogOut,
   Home,
-  Shield
+  Shield,
+  MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 import { clearToken } from "@/lib/auth";
@@ -126,6 +127,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <Link href="/admin/links">
                     <Link2 className="h-4 w-4 mr-2" />
                     Quản lý Links
+                  </Link>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/admin/feedback">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Ý kiến đóng góp
                   </Link>
                 </Button>
                 <Button variant="ghost" className="w-full justify-start" asChild>
