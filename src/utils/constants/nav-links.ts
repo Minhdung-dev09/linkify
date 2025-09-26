@@ -36,4 +36,9 @@ export const NAV_LINKS = [
         href: "/pricing",
         isModal: true, // Flag để trigger modal thay vì navigate
     },
+    {
+        title: "Thư ngỏ",
+        href: "/#investor",
+        openInvestorModal: true,
+    },
 ];

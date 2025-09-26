@@ -22,6 +22,7 @@ import MaxWidthWrapper from "../global/max-width-wrapper";
 import MobileNavbar from "./mobile-navbar";
 import AnimationContainer from "../global/animation-container";
 import PricingModal from "../ui/pricing-modal";
+import InvestorInviteModal from "../ui/investor-invite-modal";
 import ChangePasswordModal from "../ui/ChangePasswordModal";
 
 const Navbar = () => {
@@ -33,6 +34,7 @@ const Navbar = () => {
     const [avatarUrl, setAvatarUrl] = useState<string>("");
     const [pricingModalOpen, setPricingModalOpen] = useState(false);
     const [changePwOpen, setChangePwOpen] = useState(false);
+    const [investorOpen, setInvestorOpen] = useState(false);
     const [notifications, setNotifications] = useState<Array<{ id: string; title: string; createdAt: string; readAt?: string | null }>>([]);
     const hasUnread = notifications.some(n => !n.readAt);
 
@@ -126,7 +128,7 @@ const Navbar = () => {
                     <div className="flex items-center space-x-12">
                         <Link href="/#home">
                             <span className="text-lg font-bold font-heading !leading-none">
-                                Linkify
+                                ccme-shortlink
                             </span>
                         </Link>
 
@@ -174,7 +176,14 @@ const Navbar = () => {
                                                 </NavigationMenuContent>
                                             </>
                                         ) : (
-                                            link.isModal ? (
+                                            link.openInvestorModal ? (
+                                                <button
+                                                    onClick={() => setInvestorOpen(true)}
+                                                    className={navigationMenuTriggerStyle()}
+                                                >
+                                                    {link.title}
+                                                </button>
+                                            ) : link.isModal ? (
                                                 <button
                                                     onClick={() => setPricingModalOpen(true)}
                                                     className={navigationMenuTriggerStyle()}
@@ -238,13 +247,13 @@ const Navbar = () => {
                                             </div>
                                         )}
                                         <DropdownMenuItem asChild>
-                                            <Link href="/dashboard">Dashboard</Link>
+                                            <Link href="/dashboard">Bảng điều khiển</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => setChangePwOpen(true)}>
                                             Đổi mật khẩu
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => { clearToken(); window.location.href = "/"; }}>
-                                            Sign out
+                                            Đăng xuất
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -252,10 +261,10 @@ const Navbar = () => {
                         ) : (
                             <div className="flex items-center gap-x-4">
                                 <Link href="/auth/sign-in" className={buttonVariants({ size: "sm", variant: "ghost" })}>
-                                    Sign In
+                                    Đăng nhập
                                 </Link>
                                 <Link href="/auth/sign-up" className={buttonVariants({ size: "sm", })}>
-                                    Get Started
+                                    Bắt đầu
                                     <ZapIcon className="size-3.5 ml-1.5 text-orange-500 fill-orange-500" />
                                 </Link>
                             </div>
@@ -268,6 +277,7 @@ const Navbar = () => {
             </AnimationContainer>
             
             <PricingModal open={pricingModalOpen} onOpenChange={setPricingModalOpen} />
+            <InvestorInviteModal open={investorOpen} onOpenChange={setInvestorOpen} />
             <ChangePasswordModal open={changePwOpen} onOpenChange={setChangePwOpen} />
         </header>
     )
