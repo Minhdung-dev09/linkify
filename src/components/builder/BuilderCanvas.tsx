@@ -534,7 +534,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                          <div className="text-sm text-gray-500">{element.props.role || 'Role'}</div>
                        </div>
                      </div>
-                     <p className="text-gray-700 mb-4">"{element.props.quote || 'Testimonial quote'}"</p>
+                     <p className="text-gray-700 mb-4">&ldquo;{element.props.quote || 'Testimonial quote'}&rdquo;</p>
                      <div className="flex">
                        {Array.from({ length: element.props.rating || 5 }).map((_, index) => (
                          <span key={index} className="text-yellow-400">★</span>

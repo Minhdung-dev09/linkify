@@ -47,6 +47,18 @@ export function isAuthenticated(): boolean {
 }
 
 /**
+ * Set authentication token
+ */
+export function setToken(token: string): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('token', token);
+    localStorage.setItem('auth_token', token);
+    // Set cookie
+    document.cookie = `token=${token}; path=/; max-age=86400`; // 24 hours
+  }
+}
+
+/**
  * Clear authentication token
  */
 export function clearToken(): void {

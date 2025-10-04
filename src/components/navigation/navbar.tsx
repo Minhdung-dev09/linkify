@@ -195,7 +195,7 @@ const Navbar = () => {
                                                 </NavigationMenuContent>
                                             </>
                                         ) : (
-                                            link.openInvestorModal ? (
+                                            link.isModal ? (
                                                 <button
                                                     onClick={() => setInvestorOpen(true)}
                                                     className={navigationMenuTriggerStyle()}
