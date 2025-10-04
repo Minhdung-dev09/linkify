@@ -386,10 +386,14 @@ export default function BuilderPage() {
         onClose={() => setShowSaveDialog(false)}
         onSave={async (data) => {
           try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${API_BASE_URL}/api/landing-pages`, {
+            const headers = getAuthHeaders();
+            console.log('Auth headers:', headers);
+            console.log('Token from localStorage:', localStorage.getItem('token'));
+            console.log('Token from auth_token:', localStorage.getItem('auth_token'));
+            
+            const response = await fetch('/api/landing-pages', {
               method: 'POST',
-              headers: getAuthHeaders(),
+              headers,
               body: JSON.stringify(data),
             });
 
