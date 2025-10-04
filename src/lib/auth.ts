@@ -1,42 +1,78 @@
-const TOKEN_KEY = "auth_token";
-const USER_KEY = "auth_user";
+/**
+ * Get authentication token from various sources
+ */
+export function getAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    // Try localStorage with different key names
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    if (token) return token;
+    
+    // Try cookies
+    const cookieToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+    
+    if (cookieToken) return cookieToken;
+  }
+  
+  return null;
+}
 
-export function setToken(token: string) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(TOKEN_KEY, token);
-    // also mirror into cookie for middleware routing
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `token=${encodeURIComponent(token)}; expires=${expires}; path=/; SameSite=Lax`;
+// Alias for backward compatibility
+export const getToken = getAuthToken;
+
+/**
+ * Get headers with authentication
+ */
+export function getAuthHeaders(): HeadersInit {
+  const token = getAuthToken();
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
+/**
+ * Check if user is authenticated
+ */
+export function isAuthenticated(): boolean {
+  return getAuthToken() !== null;
+}
+
+/**
+ * Clear authentication token
+ */
+export function clearToken(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    // Clear cookies
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   }
 }
 
-export function setUser(user: any) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  }
-}
-
+/**
+ * Get user from localStorage
+ */
 export function getUser(): any | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const user = localStorage.getItem(USER_KEY);
-    return user ? JSON.parse(user) : null;
-  } catch {
-    return null;
+  if (typeof window !== 'undefined') {
+    const userStr = localStorage.getItem('auth_user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+      }
+    }
   }
+  return null;
 }
-
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function clearToken() {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    document.cookie = "token=; Max-Age=0; path=/; SameSite=Lax";
-  }
-}
-
-
