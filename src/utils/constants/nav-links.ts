@@ -1,4 +1,4 @@
-import { HelpCircleIcon, LineChartIcon, Link2Icon, LockIcon, NewspaperIcon, QrCodeIcon } from "lucide-react";
+import { HelpCircleIcon, LineChartIcon, Link2Icon, LockIcon, NewspaperIcon, QrCodeIcon, Palette, Layout } from "lucide-react";
 
 export const NAV_LINKS = [
     {
@@ -32,13 +32,19 @@ export const NAV_LINKS = [
         ],
     },
     {
+        title: "Builder",
+        href: "/builder",
+        icon: Palette,
+        tagline: "Tạo landing page chuyên nghiệp với drag & drop",
+    },
+    {
         title: "Pricing",
         href: "/pricing",
         isModal: true, // Flag để trigger modal thay vì navigate
     },
-    {
-        title: "Thư ngỏ",
-        href: "/#investor",
-        openInvestorModal: true,
-    },
+    // {
+    //     title: "Thư ngỏ",
+    //     href: "/#investor",
+    //     openInvestorModal: true,
+    // },
 ];
