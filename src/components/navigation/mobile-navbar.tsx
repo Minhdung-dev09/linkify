@@ -129,7 +129,7 @@ const MobileNavbar = () => {
                                                 </AccordionContent>
                                             </>
                                         ) : (
-                                            link.openInvestorModal ? (
+                                            link.isModal ? (
                                                 <button
                                                     onClick={() => {
                                                         setInvestorOpen(true);
