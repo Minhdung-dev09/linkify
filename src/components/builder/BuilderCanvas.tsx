@@ -39,11 +39,58 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   const [dragElement, setDragElement] = useState<string | null>(null);
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [showElementActions, setShowElementActions] = useState<string | null>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const canvasScrollRef = useRef<HTMLDivElement>(null);
+
+  // Smart scroll detection and management
+  useEffect(() => {
+    const checkScroll = () => {
+      if (canvasScrollRef.current) {
+        const { scrollHeight, clientHeight } = canvasScrollRef.current;
+        const canScroll = scrollHeight > clientHeight + 50;
+        setShowScrollHint(canScroll && page.elements.length > 0);
+      }
+    };
+    
+    checkScroll();
+    const timer = setTimeout(checkScroll, 200);
+    return () => clearTimeout(timer);
+  }, [page.elements]);
+
+  // Scroll to selected element when it's selected
+  useEffect(() => {
+    if (selectedElement && canvasScrollRef.current) {
+      const element = document.getElementById(selectedElement);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest' 
+        });
+      }
+    }
+  }, [selectedElement]);
 
   // Global mouse event listeners for dragging and resizing
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!dragElement) return;
+
+      // Auto-scroll when dragging near edges
+      if (canvasScrollRef.current) {
+        const rect = canvasScrollRef.current.getBoundingClientRect();
+        const scrollThreshold = 50;
+        const scrollSpeed = 10;
+        
+        // Scroll down when near bottom edge
+        if (e.clientY > rect.bottom - scrollThreshold) {
+          canvasScrollRef.current.scrollTop += scrollSpeed;
+        }
+        // Scroll up when near top edge
+        else if (e.clientY < rect.top + scrollThreshold) {
+          canvasScrollRef.current.scrollTop -= scrollSpeed;
+        }
+      }
 
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
@@ -256,6 +303,16 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                 fontSize: element.props.fontSize || 16,
                 fontWeight: element.props.fontWeight || 'medium'
               }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (element.props.linkUrl) {
+                  if (element.props.linkTarget === '_blank') {
+                    window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                  } else {
+                    window.location.href = element.props.linkUrl;
+                  }
+                }
+              }}
             >
               {element.props.text || 'Click Me'}
             </button>
@@ -263,9 +320,19 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
 
           {element.type === 'image' && (
             <div 
-              className="w-full h-full bg-gray-200 rounded-md overflow-hidden flex items-center justify-center"
+              className="w-full h-full bg-gray-200 rounded-md overflow-hidden flex items-center justify-center cursor-pointer"
               style={{
                 backgroundColor: element.props.backgroundColor || '#f3f4f6'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (element.props.linkUrl) {
+                  if (element.props.linkTarget === '_blank') {
+                    window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                  } else {
+                    window.location.href = element.props.linkUrl;
+                  }
+                }
               }}
             >
               {element.props.src ? (
@@ -390,6 +457,16 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                            backgroundColor: element.props.buttonColor || '#3b82f6',
                            color: '#ffffff'
                          }}
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           if (element.props.linkUrl) {
+                             if (element.props.linkTarget === '_blank') {
+                               window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                             } else {
+                               window.location.href = element.props.linkUrl;
+                             }
+                           }
+                         }}
                        >
                          {element.props.buttonText || 'Get Started'}
                        </button>
@@ -425,6 +502,16 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                        style={{
                          backgroundColor: element.props.buttonColor || '#3b82f6',
                          color: '#ffffff'
+                       }}
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         if (element.props.linkUrl) {
+                           if (element.props.linkTarget === '_blank') {
+                             window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                           } else {
+                             window.location.href = element.props.linkUrl;
+                           }
+                         }
                        }}
                      >
                        {element.props.buttonText || 'Get Started'}
@@ -490,6 +577,16 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                      <p className="mb-6">{element.props.subtitle || 'Subtitle'}</p>
                      <button
                        className="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:bg-gray-100"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         if (element.props.linkUrl) {
+                           if (element.props.linkTarget === '_blank') {
+                             window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                           } else {
+                             window.location.href = element.props.linkUrl;
+                           }
+                         }
+                       }}
                      >
                        {element.props.buttonText || 'Button'}
                      </button>
@@ -526,6 +623,16 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                        ))}
                        <button
                          className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           if (element.props.linkUrl) {
+                             if (element.props.linkTarget === '_blank') {
+                               window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                             } else {
+                               window.location.href = element.props.linkUrl;
+                             }
+                           }
+                         }}
                        >
                          {element.props.buttonText || 'Send Message'}
                        </button>
@@ -551,6 +658,16 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                        />
                        <button
                          className="px-4 py-2 bg-blue-600 text-white rounded font-medium"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           if (element.props.linkUrl) {
+                             if (element.props.linkTarget === '_blank') {
+                               window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                             } else {
+                               window.location.href = element.props.linkUrl;
+                             }
+                           }
+                         }}
                        >
                          {element.props.buttonText || 'Subscribe'}
                        </button>
@@ -683,31 +800,41 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
 
         {/* Canvas Content */}
         <div 
-          className="relative w-full h-full overflow-hidden"
+          ref={canvasScrollRef}
+          className="relative w-full overflow-y-auto overflow-x-hidden scroll-smooth"
           style={{
             height: deviceDimensions.height - 32,
             backgroundColor: page.settings.backgroundColor,
-            padding: page.settings.padding
+            padding: page.settings.padding,
+            scrollBehavior: 'smooth'
           }}
         >
-          {/* Grid Background */}
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-                linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-              `,
-              backgroundSize: '20px 20px'
-            }}
-          />
+          {/* Content Container - Dynamic Height Based on Elements */}
+          <div style={{ position: 'relative', minHeight: '100vh' }}>
+            {/* Grid Background */}
+            <div 
+              className="absolute inset-0 opacity-20"
+              style={{
+                backgroundImage: `
+                  linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                  linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+                `,
+                backgroundSize: '20px 20px'
+              }}
+            />
 
-          {/* Elements */}
-          {page.elements.map(renderElement)}
+            {/* Elements */}
+            {page.elements.map(renderElement)}
+            
+            {/* Extra Space for Scrolling - Only when needed */}
+            {page.elements.length > 0 && (
+              <div style={{ height: '50vh', width: '100%' }}></div>
+            )}
+          </div>
 
           {/* Drop Zone Indicator */}
           {page.elements.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center" style={{ minHeight: '100vh' }}>
               <div className="text-center text-gray-400">
                 <div className="text-4xl mb-2">📄</div>
                 <div className="text-lg font-medium">Start building your page</div>
@@ -715,6 +842,15 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
               </div>
             </div>
           )}
+
+          {/* Scroll Hint */}
+          {showScrollHint && (
+            <div className="absolute bottom-4 right-4 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2 shadow-lg animate-pulse">
+              <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+              Scroll to see more
+            </div>
+          )}
+
         </div>
       </div>
     </div>

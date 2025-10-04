@@ -161,6 +161,42 @@ const PropertiesPanel = ({
               />
             </div>
 
+            <Separator />
+
+            <div>
+              <Label htmlFor="linkUrl">Link URL</Label>
+              <Input
+                id="linkUrl"
+                value={selectedElement.props.linkUrl || ''}
+                onChange={(e) => updateProps({ linkUrl: e.target.value })}
+                placeholder="https://example.com or mailto:email@example.com"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter URL to link to when button is clicked
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="linkTarget">Link Target</Label>
+              <Select
+                value={selectedElement.props.linkTarget || '_self'}
+                onValueChange={(value) => updateProps({ linkTarget: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_self">Same Tab</SelectItem>
+                  <SelectItem value="_blank">New Tab</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Choose how the link opens
+              </p>
+            </div>
+
+            <Separator />
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="buttonBg">Background Color</Label>
@@ -220,6 +256,39 @@ const PropertiesPanel = ({
                 placeholder="Image description..."
               />
             </div>
+
+            <Separator />
+
+            <div>
+              <Label htmlFor="imageLinkUrl">Link URL (Optional)</Label>
+              <Input
+                id="imageLinkUrl"
+                value={selectedElement.props.linkUrl || ''}
+                onChange={(e) => updateProps({ linkUrl: e.target.value })}
+                placeholder="https://example.com or mailto:email@example.com"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Make image clickable by adding a link
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="imageLinkTarget">Link Target</Label>
+              <Select
+                value={selectedElement.props.linkTarget || '_self'}
+                onValueChange={(value) => updateProps({ linkTarget: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_self">Same Tab</SelectItem>
+                  <SelectItem value="_blank">New Tab</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
 
             <div>
               <Label htmlFor="objectFit">Object Fit</Label>

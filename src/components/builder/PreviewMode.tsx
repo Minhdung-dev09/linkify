@@ -257,6 +257,16 @@ const PreviewMode = ({ page, deviceMode, onClose, onDeviceChange }: PreviewModeP
               fontSize: element.props.fontSize || 16,
               fontWeight: element.props.fontWeight || 'medium'
             }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (element.props.linkUrl) {
+                if (element.props.linkTarget === '_blank') {
+                  window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                } else {
+                  window.location.href = element.props.linkUrl;
+                }
+              }
+            }}
           >
             {element.props.text || 'Click Me'}
           </button>
@@ -266,10 +276,20 @@ const PreviewMode = ({ page, deviceMode, onClose, onDeviceChange }: PreviewModeP
         return (
           <div 
             key={element.id}
-            className="w-full h-full bg-gray-200 rounded-md overflow-hidden flex items-center justify-center"
+            className="w-full h-full bg-gray-200 rounded-md overflow-hidden flex items-center justify-center cursor-pointer"
             style={{
               ...elementStyle,
               backgroundColor: element.props.backgroundColor || '#f3f4f6'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (element.props.linkUrl) {
+                if (element.props.linkTarget === '_blank') {
+                  window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                } else {
+                  window.location.href = element.props.linkUrl;
+                }
+              }
             }}
           >
             {element.props.src ? (
@@ -459,19 +479,28 @@ const PreviewMode = ({ page, deviceMode, onClose, onDeviceChange }: PreviewModeP
 
           {/* Page Content */}
           <div 
-            className="relative w-full h-full overflow-hidden"
+            className="relative w-full overflow-y-auto overflow-x-hidden scroll-smooth"
             style={{
               height: isFullscreen ? '100vh' : deviceDimensions.height - 32,
               backgroundColor: page.settings.backgroundColor,
-              padding: page.settings.padding
+              padding: page.settings.padding,
+              scrollBehavior: 'smooth'
             }}
           >
-            {/* Elements */}
-            {page.elements.map(renderElement)}
+            {/* Content Container - Dynamic Height Based on Elements */}
+            <div style={{ position: 'relative', minHeight: '100vh' }}>
+              {/* Elements */}
+              {page.elements.map(renderElement)}
+              
+              {/* Extra Space for Scrolling - Only when needed */}
+              {page.elements.length > 0 && (
+                <div style={{ height: '50vh', width: '100%' }}></div>
+              )}
+            </div>
 
             {/* Empty State */}
             {page.elements.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center" style={{ minHeight: '100vh' }}>
                 <div className="text-center text-gray-400">
                   <div className="text-4xl mb-2">📄</div>
                   <div className="text-lg font-medium">Empty Page</div>
