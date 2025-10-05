@@ -10,7 +10,16 @@ import {
   Lock, 
   Unlock,
   Eye,
-  EyeOff
+  EyeOff,
+  Bold,
+  Italic,
+  Underline,
+  Palette,
+  Type,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Link
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,6 +49,10 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [showElementActions, setShowElementActions] = useState<string | null>(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
+  const [showTextEditor, setShowTextEditor] = useState<string | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
+  const [showFontSizePicker, setShowFontSizePicker] = useState<string | null>(null);
+  const [showLinkInput, setShowLinkInput] = useState<string | null>(null);
   const canvasScrollRef = useRef<HTMLDivElement>(null);
 
   // Smart scroll detection and management
@@ -197,6 +210,61 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
     onSelectElement(null);
   }, [onSelectElement]);
 
+  // Text editor handlers
+  const isTextElement = (element: BuilderElement) => {
+    return element.type === 'heading' || element.type === 'paragraph' || element.type === 'button';
+  };
+
+  const handleBold = useCallback((elementId: string) => {
+    const element = page.elements.find(el => el.id === elementId);
+    if (element) {
+      const currentWeight = element.props.fontWeight || 'normal';
+      const newWeight = currentWeight === 'bold' ? 'normal' : 'bold';
+      onUpdateElement(elementId, { props: { ...element.props, fontWeight: newWeight } });
+    }
+  }, [page.elements, onUpdateElement]);
+
+  const handleItalic = useCallback((elementId: string) => {
+    const element = page.elements.find(el => el.id === elementId);
+    if (element) {
+      const currentStyle = element.props.fontStyle || 'normal';
+      const newStyle = currentStyle === 'italic' ? 'normal' : 'italic';
+      onUpdateElement(elementId, { props: { ...element.props, fontStyle: newStyle } });
+    }
+  }, [page.elements, onUpdateElement]);
+
+  const handleUnderline = useCallback((elementId: string) => {
+    const element = page.elements.find(el => el.id === elementId);
+    if (element) {
+      const currentDecoration = element.props.textDecoration || 'none';
+      const newDecoration = currentDecoration === 'underline' ? 'none' : 'underline';
+      onUpdateElement(elementId, { props: { ...element.props, textDecoration: newDecoration } });
+    }
+  }, [page.elements, onUpdateElement]);
+
+  const handleTextAlign = useCallback((elementId: string, align: string) => {
+    const element = page.elements.find(el => el.id === elementId);
+    if (element) {
+      onUpdateElement(elementId, { props: { ...element.props, textAlign: align } });
+    }
+  }, [page.elements, onUpdateElement]);
+
+  const handleColorChange = useCallback((elementId: string, color: string) => {
+    const element = page.elements.find(el => el.id === elementId);
+    if (element) {
+      onUpdateElement(elementId, { props: { ...element.props, color } });
+      setShowColorPicker(null);
+    }
+  }, [page.elements, onUpdateElement]);
+
+  const handleFontSizeChange = useCallback((elementId: string, size: number) => {
+    const element = page.elements.find(el => el.id === elementId);
+    if (element) {
+      onUpdateElement(elementId, { props: { ...element.props, fontSize: size } });
+      setShowFontSizePicker(null);
+    }
+  }, [page.elements, onUpdateElement]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent, elementId: string) => {
     if (e.button !== 0) return; // Only left mouse button
     
@@ -271,7 +339,9 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                 fontWeight: element.props.fontWeight || 'bold',
                 color: element.props.color || '#000000',
                 textAlign: element.props.textAlign || 'left',
-                fontFamily: element.props.fontFamily || 'inherit'
+                fontFamily: element.props.fontFamily || 'inherit',
+                fontStyle: element.props.fontStyle || 'normal',
+                textDecoration: element.props.textDecoration || 'none'
               }}
             >
               {element.props.text || 'Heading Text'}
@@ -286,7 +356,10 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                 color: element.props.color || '#666666',
                 textAlign: element.props.textAlign || 'left',
                 fontFamily: element.props.fontFamily || 'inherit',
-                lineHeight: element.props.lineHeight || 1.5
+                lineHeight: element.props.lineHeight || 1.5,
+                fontWeight: element.props.fontWeight || 'normal',
+                fontStyle: element.props.fontStyle || 'normal',
+                textDecoration: element.props.textDecoration || 'none'
               }}
             >
               {element.props.text || 'Paragraph text goes here...'}
@@ -301,7 +374,10 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                 color: element.props.color || '#ffffff',
                 borderRadius: element.props.borderRadius || 8,
                 fontSize: element.props.fontSize || 16,
-                fontWeight: element.props.fontWeight || 'medium'
+                fontWeight: element.props.fontWeight || 'medium',
+                fontStyle: element.props.fontStyle || 'normal',
+                textDecoration: element.props.textDecoration || 'none',
+                textAlign: element.props.textAlign || 'center'
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -387,17 +463,131 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
 
                  {element.type === 'header' && (
                    <div
-                     className="w-full h-full flex items-center justify-between px-4 border-b"
+                      className="w-full h-full flex items-center justify-between px-4 border-b cursor-pointer transition-all duration-200 hover:shadow-lg"
                      style={{
                        backgroundColor: element.props.backgroundColor || '#1f2937',
-                       color: element.props.textColor || '#ffffff'
-                     }}
-                   >
-                     <div className="font-bold text-lg">{element.props.logoText || 'Logo'}</div>
-                     <div className="flex gap-4">
-                       {(element.props.navItems || []).map((item: string, index: number) => (
-                         <span key={index} className="text-sm hover:underline cursor-pointer">
-                           {item}
+                        color: element.props.textColor || '#ffffff',
+                        paddingTop: element.props.paddingTop || 16,
+                        paddingRight: element.props.paddingRight || 24,
+                        paddingBottom: element.props.paddingBottom || 16,
+                        paddingLeft: element.props.paddingLeft || 24,
+                        marginTop: element.props.marginTop || 0,
+                        marginRight: element.props.marginRight || 0,
+                        marginBottom: element.props.marginBottom || 0,
+                        marginLeft: element.props.marginLeft || 0,
+                        borderWidth: element.props.borderWidth || 0,
+                        borderStyle: element.props.borderStyle || 'solid',
+                        borderColor: element.props.borderColor || 'transparent',
+                        borderRadius: element.props.borderRadius || 0,
+                        boxShadow: element.props.shadowX || element.props.shadowY || element.props.shadowBlur || element.props.shadowColor 
+                          ? `${element.props.shadowX || 0}px ${element.props.shadowY || 2}px ${element.props.shadowBlur || 4}px ${element.props.shadowColor || 'rgba(0, 0, 0, 0.1)'}`
+                          : 'none',
+                        backgroundImage: element.props.backgroundImage ? `url(${element.props.backgroundImage})` : 'none',
+                        backgroundPosition: element.props.backgroundPosition || 'center',
+                        backgroundSize: element.props.backgroundSize || 'cover',
+                        backgroundRepeat: element.props.backgroundRepeat || 'no-repeat',
+                        display: element.props.display || 'flex',
+                        alignItems: element.props.alignItems || 'center',
+                        justifyContent: element.props.justifyContent || 'space-between',
+                        position: element.props.position || 'sticky',
+                        top: element.props.top || 0,
+                        zIndex: element.props.zIndex || 1000,
+                        overflow: element.props.overflow || 'visible',
+                        minHeight: element.props.minHeight || 80,
+                        maxWidth: element.props.maxWidth || '100%'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (element.props.linkUrl) {
+                          if (element.props.linkTarget === '_blank') {
+                            window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
+                          } else {
+                            window.location.href = element.props.linkUrl;
+                          }
+                        }
+                      }}
+                    >
+                      <div 
+                        className="font-bold cursor-pointer transition-all duration-200 hover:scale-105"
+                        style={{
+                          fontSize: element.props.logoFontSize || 24,
+                          fontWeight: element.props.logoFontWeight || 'bold',
+                          color: element.props.logoColor || '#ffffff',
+                          width: element.props.logoWidth || 120,
+                          height: element.props.logoHeight || 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: element.props.logoPosition === 'center' ? 'center' : 'flex-start'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (element.props.logoLink) {
+                            if (element.props.logoLinkTarget === '_blank') {
+                              window.open(element.props.logoLink, '_blank', 'noopener,noreferrer');
+                            } else {
+                              window.location.href = element.props.logoLink;
+                            }
+                          }
+                        }}
+                      >
+                        {element.props.logoImageUrl ? (
+                          <img 
+                            src={element.props.logoImageUrl} 
+                            alt={element.props.logoText || 'Logo'}
+                            style={{
+                              width: element.props.logoWidth || 120,
+                              height: element.props.logoHeight || 40,
+                              objectFit: 'contain'
+                            }}
+                          />
+                        ) : (
+                          element.props.logoText || 'Logo'
+                        )}
+                      </div>
+                      <div 
+                        className="flex"
+                        style={{
+                          gap: element.props.navSpacing || 24
+                        }}
+                      >
+                        {(element.props.navItems || []).map((item: any, index: number) => (
+                          <span 
+                            key={index} 
+                            className="hover:underline cursor-pointer transition-all duration-200 hover:scale-105"
+                            style={{
+                              fontSize: element.props.navFontSize || 16,
+                              fontWeight: element.props.navFontWeight || 'medium',
+                              color: element.props.navColor || '#ffffff',
+                              padding: `${element.props.navPadding || 12}px`,
+                              borderRadius: `${element.props.navBorderRadius || 6}px`,
+                              transition: element.props.navTransition || 'all 0.3s ease',
+                              transform: 'translateY(0)',
+                              boxShadow: 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = element.props.navHoverColor || '#f3f4f6';
+                              e.currentTarget.style.backgroundColor = element.props.navHoverBackground || 'rgba(255, 255, 255, 0.1)';
+                              e.currentTarget.style.transform = element.props.navTransform || 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = element.props.navShadow || '0 4px 8px rgba(0, 0, 0, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = element.props.navColor || '#ffffff';
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (item.link) {
+                                if (item.target === '_blank') {
+                                  window.open(item.link, '_blank', 'noopener,noreferrer');
+                                } else {
+                                  window.location.href = item.link;
+                                }
+                              }
+                            }}
+                          >
+                            {typeof item === 'string' ? item : item.label}
                          </span>
                        ))}
                      </div>
@@ -674,57 +864,608 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                      </div>
                    </div>
                  )}
+
+                 {/* New Advanced Elements */}
+                 {element.type === 'grid-layout' && (
+                   <div
+                     className="w-full h-full border-2 border-dashed border-gray-300 rounded-md p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#f8f9fa',
+                       display: 'grid',
+                       gridTemplateColumns: `repeat(${element.props.columns || 3}, 1fr)`,
+                       gap: `${element.props.gap || 16}px`,
+                       padding: `${element.props.padding || 20}px`
+                     }}
+                   >
+                     <div className="bg-white rounded p-2 text-xs text-center">Grid Item 1</div>
+                     <div className="bg-white rounded p-2 text-xs text-center">Grid Item 2</div>
+                     <div className="bg-white rounded p-2 text-xs text-center">Grid Item 3</div>
+                   </div>
+                 )}
+
+                 {element.type === 'flex-layout' && (
+                   <div
+                     className="w-full h-full border-2 border-dashed border-gray-300 rounded-md p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#f8f9fa',
+                       display: 'flex',
+                       flexDirection: element.props.direction || 'row',
+                       justifyContent: element.props.justifyContent || 'center',
+                       alignItems: element.props.alignItems || 'center',
+                       gap: `${element.props.gap || 16}px`,
+                       padding: `${element.props.padding || 20}px`
+                     }}
+                   >
+                     <div className="bg-white rounded p-2 text-xs">Flex Item 1</div>
+                     <div className="bg-white rounded p-2 text-xs">Flex Item 2</div>
+                     <div className="bg-white rounded p-2 text-xs">Flex Item 3</div>
+                   </div>
+                 )}
+
+                 {element.type === 'video-player' && (
+                   <div
+                     className="w-full h-full bg-black rounded-lg flex items-center justify-center"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#000000'
+                     }}
+                   >
+                     <div className="text-white text-center">
+                       <div className="text-lg mb-2">🎥</div>
+                       <div className="text-sm">{element.props.title || 'Video Player'}</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'audio-player' && (
+                   <div
+                     className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#f8f9fa'
+                     }}
+                   >
+                     <div className="text-gray-600 text-center">
+                       <div className="text-lg mb-2">🎵</div>
+                       <div className="text-sm">{element.props.title || 'Audio Player'}</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'image-gallery' && (
+                   <div
+                     className="w-full h-full bg-gray-100 rounded-lg p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#f8f9fa'
+                     }}
+                   >
+                     <div className="text-center text-gray-600">
+                       <div className="text-lg mb-2">🖼️</div>
+                       <div className="text-sm">Gallery ({element.props.images?.length || 0} images)</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'accordion' && (
+                   <div
+                     className="w-full h-full border rounded-lg p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="text-sm text-gray-600 mb-2">Accordion</div>
+                     {(element.props.items || []).map((item: any, index: number) => (
+                       <div key={index} className="border-b border-gray-200 py-2">
+                         <div className="font-medium text-sm">{item.title}</div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+
+                 {element.type === 'tabs' && (
+                   <div
+                     className="w-full h-full border rounded-lg"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="flex border-b">
+                       {(element.props.tabs || []).map((tab: any, index: number) => (
+                         <div key={index} className="px-4 py-2 text-sm border-r">
+                           {tab.label}
+                         </div>
+                       ))}
+                     </div>
+                     <div className="p-4 text-sm text-gray-600">
+                       Tab Content
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'modal' && (
+                   <div
+                     className="w-full h-full border rounded-lg p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="text-center text-gray-600">
+                       <div className="text-lg mb-2">📋</div>
+                       <div className="text-sm">Modal Dialog</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'dropdown' && (
+                   <div
+                     className="w-full h-full border rounded-lg p-2"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="text-sm text-gray-600">{element.props.label || 'Select Option'}</div>
+                   </div>
+                 )}
+
+                 {element.type === 'data-table' && (
+                   <div
+                     className="w-full h-full border rounded-lg overflow-hidden"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="text-xs text-gray-500 p-2 border-b">Data Table</div>
+                     <div className="p-2 text-xs">
+                       <div className="grid grid-cols-3 gap-2 mb-1 font-medium">
+                         {(element.props.headers || []).map((header: string, index: number) => (
+                           <div key={index}>{header}</div>
+                         ))}
+                       </div>
+                       {(element.props.rows || []).map((row: string[], index: number) => (
+                         <div key={index} className="grid grid-cols-3 gap-2 text-xs">
+                           {row.map((cell: string, cellIndex: number) => (
+                             <div key={cellIndex}>{cell}</div>
+                           ))}
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'chart' && (
+                   <div
+                     className="w-full h-full border rounded-lg p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="text-center text-gray-600">
+                       <div className="text-lg mb-2">📊</div>
+                       <div className="text-sm">{element.props.type || 'bar'} Chart</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'progress-bar' && (
+                   <div
+                     className="w-full h-full flex items-center p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="w-full">
+                       <div className="text-xs text-gray-600 mb-1">{element.props.label || 'Progress'}</div>
+                       <div className="w-full bg-gray-200 rounded-full h-2">
+                         <div
+                           className="h-2 rounded-full"
+                           style={{
+                             width: `${element.props.value || 0}%`,
+                             backgroundColor: element.props.fillColor || '#3b82f6'
+                           }}
+                         ></div>
+                       </div>
+                       {element.props.showPercentage && (
+                         <div className="text-xs text-gray-600 mt-1">{element.props.value || 0}%</div>
+                       )}
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'stats-card' && (
+                   <div
+                     className="w-full h-full border rounded-lg p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="text-sm text-gray-600">{element.props.title || 'Total Users'}</div>
+                     <div className="text-2xl font-bold">{element.props.value || '1,234'}</div>
+                     <div className="text-xs text-green-600">{element.props.change || '+12%'}</div>
+                   </div>
+                 )}
+
+                 {element.type === 'social-links' && (
+                   <div
+                     className="w-full h-full flex items-center justify-center gap-2 p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || 'transparent'
+                     }}
+                   >
+                     {(element.props.platforms || []).map((platform: string, index: number) => (
+                       <div key={index} className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs">
+                         {platform.charAt(0).toUpperCase()}
+                       </div>
+                     ))}
+                   </div>
+                 )}
+
+                 {element.type === 'whatsapp-button' && (
+                   <div
+                     className="w-full h-full flex items-center justify-center rounded-lg"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#25d366',
+                       color: element.props.textColor || '#ffffff'
+                     }}
+                   >
+                     <div className="text-center">
+                       <div className="text-lg mb-1">💬</div>
+                       <div className="text-sm font-medium">WhatsApp</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'contact-info' && (
+                   <div
+                     className="w-full h-full border rounded-lg p-4"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <div className="space-y-2 text-sm">
+                       <div className="flex items-center gap-2">
+                         <span>📞</span>
+                         <span>{element.props.phone || '+1 (555) 123-4567'}</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <span>✉️</span>
+                         <span>{element.props.email || 'contact@example.com'}</span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <span>📍</span>
+                         <span>{element.props.address || '123 Main St, City, State'}</span>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'search-bar' && (
+                   <div
+                     className="w-full h-full border rounded-lg flex items-center p-2"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#ffffff',
+                       borderColor: element.props.borderColor || '#e5e7eb'
+                     }}
+                   >
+                     <input
+                       type="text"
+                       className="flex-1 text-sm outline-none"
+                       placeholder={element.props.placeholder || 'Search...'}
+                     />
+                     <button className="ml-2 px-3 py-1 bg-blue-600 text-white rounded text-xs">
+                       {element.props.buttonText || 'Search'}
+                     </button>
+                   </div>
+                 )}
+
+                 {element.type === 'timer' && (
+                   <div
+                     className="w-full h-full flex items-center justify-center rounded-lg"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#1f2937',
+                       color: element.props.textColor || '#ffffff'
+                     }}
+                   >
+                     <div className="text-center">
+                       <div className="text-lg mb-1">⏰</div>
+                       <div className="text-sm">Countdown Timer</div>
+                     </div>
+                   </div>
+                 )}
+
+                 {element.type === 'rating' && (
+                   <div className="w-full h-full flex items-center gap-1 p-2">
+                     {Array.from({ length: element.props.max || 5 }).map((_, index) => (
+                       <span
+                         key={index}
+                         className="text-lg"
+                         style={{
+                           color: index < (element.props.value || 0) ? (element.props.color || '#fbbf24') : '#e5e7eb'
+                         }}
+                       >
+                         ★
+                       </span>
+                     ))}
+                     {element.props.showValue && (
+                       <span className="text-sm text-gray-600 ml-2">{element.props.value || 0}</span>
+                     )}
+                   </div>
+                 )}
+
+                 {element.type === 'badge' && (
+                   <div
+                     className="w-full h-full flex items-center justify-center rounded-lg"
+                     style={{
+                       backgroundColor: element.props.backgroundColor || '#dbeafe',
+                       color: element.props.color || '#3b82f6'
+                     }}
+                   >
+                     <span className="text-sm font-medium">{element.props.text || 'New'}</span>
+                   </div>
+                 )}
+
+                 {element.type === 'divider' && (
+                   <div
+                     className="w-full h-full flex items-center justify-center"
+                     style={{
+                       backgroundColor: 'transparent'
+                     }}
+                   >
+                     <div
+                       className="w-full"
+                       style={{
+                         height: `${element.props.thickness || 2}px`,
+                         backgroundColor: element.props.color || '#e5e7eb'
+                       }}
+                     ></div>
+                   </div>
+                 )}
         </div>
 
         {/* Element Actions Overlay */}
         {(isSelected || showElementActions === element.id) && (
-          <div className="absolute -top-8 left-0 right-0 flex items-center justify-center gap-1 bg-black/80 text-white rounded-md px-2 py-1 text-xs">
+          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm text-white rounded-lg px-4 py-2 text-xs shadow-xl border border-gray-700/50 w-auto max-w-none">
+            {/* Text Editor Buttons - Only for text elements */}
+            {isTextElement(element) && (
+              <>
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                  className={cn(
+                    "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
+                    element.props.fontWeight === 'bold' 
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBold(element.id);
+                  }}
+                >
+                  <Bold className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn(
+                    "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
+                    element.props.fontStyle === 'italic' 
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleItalic(element.id);
+                  }}
+                >
+                  <Italic className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn(
+                    "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
+                    element.props.textDecoration === 'underline' 
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUnderline(element.id);
+                  }}
+                >
+                  <Underline className="h-3.5 w-3.5" />
+                </Button>
+
+                <div className="w-px h-5 bg-gray-600/50 mx-1.5"></div>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn(
+                    "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
+                    element.props.textAlign === 'left' 
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTextAlign(element.id, 'left');
+                  }}
+                >
+                  <AlignLeft className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn(
+                    "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
+                    element.props.textAlign === 'center' 
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTextAlign(element.id, 'center');
+                  }}
+                >
+                  <AlignCenter className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn(
+                    "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
+                    element.props.textAlign === 'right' 
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTextAlign(element.id, 'right');
+                  }}
+                >
+                  <AlignRight className="h-3.5 w-3.5" />
+                </Button>
+
+                <div className="w-px h-5 bg-gray-600/50 mx-1.5"></div>
+
+                {/* Font Size */}
+                <div className="relative">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200 hover:scale-105 min-w-[60px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowFontSizePicker(showFontSizePicker === element.id ? null : element.id);
+                    }}
+                  >
+                    <Type className="h-3.5 w-3.5 mr-1.5" />
+                    <span className="text-xs font-medium">
+                      {element.props.fontSize || (element.type === 'heading' ? 32 : 16)}
+                    </span>
+                  </Button>
+                  
+                  {showFontSizePicker === element.id && (
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-gray-800/95 backdrop-blur-sm border border-gray-600/50 rounded-lg shadow-xl p-3 w-40 z-50">
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[12, 14, 16, 18, 20, 24, 28, 32, 36, 48].map(size => (
+                          <Button
+                            key={size}
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                              "h-7 text-xs transition-all duration-200 hover:scale-105",
+                              element.props.fontSize === size 
+                                ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                                : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                            )}
+                            onClick={() => handleFontSizeChange(element.id, size)}
+                          >
+                            {size}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Color Picker */}
+                <div className="relative">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200 hover:scale-105"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowColorPicker(showColorPicker === element.id ? null : element.id);
+                    }}
+                  >
+                    <Palette className="h-3.5 w-3.5" />
+                  </Button>
+                  
+                  {showColorPicker === element.id && (
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-gray-800/95 backdrop-blur-sm border border-gray-600/50 rounded-lg shadow-xl p-3 w-52 z-50">
+                      <div className="grid grid-cols-7 gap-2">
+                        {['#000000', '#333333', '#666666', '#999999', '#cccccc', '#ff0000', '#ff6600', '#ffcc00', '#00ff00', '#00ccff', '#0066ff', '#6600ff', '#ff00ff', '#ffffff'].map(color => (
+                          <button
+                            key={color}
+                            className={cn(
+                              "w-7 h-7 rounded-lg border-2 transition-all duration-200 hover:scale-110 hover:shadow-lg",
+                              element.props.color === color 
+                                ? "border-blue-400 shadow-md ring-2 ring-blue-400/50" 
+                                : "border-gray-600 hover:border-gray-400"
+                            )}
+                            style={{ backgroundColor: color }}
+                            onClick={() => handleColorChange(element.id, color)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-px h-5 bg-gray-600/50 mx-1.5"></div>
+              </>
+            )}
+
+            {/* Standard Element Actions */}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200 hover:scale-105"
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdateElement(element.id, { locked: !element.locked });
               }}
             >
-              {element.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+              {element.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
             </Button>
             
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+              className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200 hover:scale-105"
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdateElement(element.id, { visible: element.visible === false ? true : false });
               }}
             >
-              {element.visible === false ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              {element.visible === false ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </Button>
 
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+              className="h-7 w-7 p-0 text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-200 hover:scale-105"
               onClick={(e) => {
                 e.stopPropagation();
                 onDuplicateElement(element.id);
               }}
             >
-              <Copy className="h-3 w-3" />
+              <Copy className="h-3.5 w-3.5" />
             </Button>
 
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+              className="h-7 w-7 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-all duration-200 hover:scale-105"
               onClick={(e) => {
                 e.stopPropagation();
                 onDeleteElement(element.id);
               }}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}

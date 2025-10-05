@@ -17,21 +17,21 @@ const SignUpPage = () => {
 
             <div className="flex flex-col items-start w-full">
                 <p className="text-sm text-muted-foreground">
-                    By signing in, you agree to our{" "}
+                    Khi đăng ký, bạn đồng ý với{" "}
                     <Link href="/terms" className="text-primary">
-                        Terms of Service{" "}
+                        Điều khoản dịch vụ{" "}
                     </Link>
-                    and{" "}
+                    và{" "}
                     <Link href="/privacy" className="text-primary">
-                        Privacy Policy
+                        Chính sách bảo mật
                     </Link>
                 </p>
             </div>
             <div className="flex items-start mt-auto border-t border-border/80 py-6 w-full">
                 <p className="text-sm text-muted-foreground">
-                    Already have an account?{" "}
+                    Đã có tài khoản?{" "}
                     <Link href="/auth/sign-in" className="text-primary">
-                        Sign in
+                        Đăng nhập
                     </Link>
                 </p>
             </div>

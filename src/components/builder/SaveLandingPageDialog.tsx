@@ -71,7 +71,7 @@ export default function SaveLandingPageDialog({
         elements: currentPage.elements
       });
       
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
       const link = `${baseUrl}/${formData.slug}`;
       setSavedLink(link);
       
@@ -253,7 +253,7 @@ export default function SaveLandingPageDialog({
                   <span className="font-medium text-blue-900">Link sẽ là:</span>
                 </div>
                 <code className="text-sm text-blue-600">
-                  {process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/{formData.slug}
+                  {process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/{formData.slug}
                 </code>
               </div>
             )}

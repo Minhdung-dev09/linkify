@@ -38,7 +38,7 @@ const SignInForm = () => {
 
         if (!email || !password) {
             setIsLoading(false);
-            toast.error("Email and password are required!");
+            toast.error("Cần nhập email và mật khẩu!");
             return;
         }
 
@@ -54,7 +54,7 @@ const SignInForm = () => {
     return (
         <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
             <h2 className="text-2xl font-semibold">
-                Sign in to ccme-shortlink
+                Đăng nhập vào ccme-shortlink
             </h2>
 
             <form onSubmit={handleSignIn} className="w-full">
@@ -68,13 +68,13 @@ const SignInForm = () => {
                         value={email}
                         disabled={isLoading}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
+                        placeholder="Nhập email của bạn"
                         className="w-full focus-visible:border-foreground"
                     />
                 </div>
                 <div className="mt-4 space-y-2">
                     <Label htmlFor="password">
-                        Password
+                        Mật khẩu
                     </Label>
                     <div className="relative w-full">
                         <Input
@@ -83,7 +83,7 @@ const SignInForm = () => {
                             value={password}
                             disabled={isLoading}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
+                            placeholder="Nhập mật khẩu của bạn"
                             className="w-full focus-visible:border-foreground"
                         />
                         <Button
@@ -109,7 +109,7 @@ const SignInForm = () => {
                     >
                         {isLoading ? (
                             <LoaderIcon className="w-5 h-5 animate-spin" />
-                        ) : "Sign in with email"}
+                        ) : "Đăng nhập bằng email"}
                     </Button>
                 </div>
             </form>
