@@ -2,30 +2,30 @@ import { HelpCircleIcon, LineChartIcon, Link2Icon, LockIcon, NewspaperIcon, QrCo
 
 export const NAV_LINKS = [
     {
-        title: "Features",
+        title: "Tính năng",
         href: "/features",
         menu: [
             {
-                title: "Link Shortening",
-                tagline: "Shorten links and track their performance.",
+                title: "Rút gọn liên kết",
+                tagline: "Rút gọn link và theo dõi hiệu quả.",
                 href: "/dashboard/links/create",
                 icon: Link2Icon,
             },
             {
-                title: "Password Protection",
-                tagline: "Secure your links with a password.",
+                title: "Bảo vệ bằng mật khẩu",
+                tagline: "Bảo vệ liên kết bằng mật khẩu.",
                 href: "/dashboard/links/create",
                 icon: LockIcon,
             },
             {
-                title: "Advanced Analytics",
-                tagline: "Gain insights into who is clicking your links.",
+                title: "Phân tích nâng cao",
+                tagline: "Hiểu rõ ai đang bấm vào liên kết.",
                 href: "/dashboard/links/create",
                 icon: LineChartIcon,
             },
             {
-                title: "Custom QR Codes",
-                tagline: "Use QR codes to reach your audience.",
+                title: "Mã QR tuỳ chỉnh",
+                tagline: "Dùng QR để tiếp cận người dùng.",
                 href: "/dashboard/links/create",
                 icon: QrCodeIcon,
             },
@@ -38,7 +38,7 @@ export const NAV_LINKS = [
         tagline: "Tạo landing page chuyên nghiệp với drag & drop",
     },
     {
-        title: "Pricing",
+        title: "Bảng giá",
         href: "/pricing",
         isModal: true, // Flag để trigger modal thay vì navigate
     },

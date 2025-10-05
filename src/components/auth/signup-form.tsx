@@ -44,7 +44,7 @@ const SignUpForm = () => {
         e.preventDefault();
 
         if (!name || !email || !password) {
-            toast.error("Name, email and password are required!");
+            toast.error("Cần nhập họ tên, email và mật khẩu!");
             return;
         }
 
@@ -59,13 +59,13 @@ const SignUpForm = () => {
     return (
         <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
             <h2 className="text-2xl font-semibold">
-                Create an account
+                Tạo tài khoản
             </h2>
 
             <form onSubmit={handleSignUp} className="w-full">
                 <div className="space-y-2 w-full">
                     <Label htmlFor="name">
-                        Name
+                        Họ tên
                     </Label>
                     <Input
                         id="name"
@@ -73,7 +73,7 @@ const SignUpForm = () => {
                         value={name}
                         disabled={isUpdating}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Enter your name"
+                        placeholder="Nhập họ tên của bạn"
                         className="w-full focus-visible:border-foreground"
                     />
                 </div>
@@ -87,7 +87,7 @@ const SignUpForm = () => {
                         value={email}
                         disabled={isUpdating}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
+                        placeholder="Nhập email của bạn"
                         className="w-full focus-visible:border-foreground"
                     />
                     {emailError && (
@@ -96,7 +96,7 @@ const SignUpForm = () => {
                 </div>
                 <div className="mt-4 space-y-2">
                     <Label htmlFor="password">
-                        Password
+                        Mật khẩu
                     </Label>
                     <div className="relative w-full">
                         <Input
@@ -105,7 +105,7 @@ const SignUpForm = () => {
                             value={password}
                             disabled={isUpdating}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
+                            placeholder="Nhập mật khẩu của bạn"
                             className="w-full focus-visible:border-foreground"
                         />
                         <Button
@@ -130,7 +130,7 @@ const SignUpForm = () => {
                     >
                         {isUpdating ? (
                             <LoaderIcon className="w-5 h-5 animate-spin" />
-                        ) : "Continue"}
+                        ) : "Tiếp tục"}
                     </Button>
                 </div>
             </form>

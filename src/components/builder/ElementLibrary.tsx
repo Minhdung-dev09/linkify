@@ -104,7 +104,8 @@ import {
   SkipBack,
   SkipForward,
   Repeat,
-  Shuffle
+  Shuffle,
+  Search
 } from "lucide-react";
 import { BuilderElement } from "@/app/builder/page";
 
@@ -686,47 +687,135 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
   ];
 
   const advancedElements = [
+    // Layout Elements
     {
       name: 'Container',
       icon: Grid,
-      description: 'Layout container',
+      description: 'Flexible layout container',
       element: {
         type: 'container' as const,
         position: { x: 100, y: 100 },
         size: { width: 300, height: 200 },
         props: { 
           backgroundColor: '#f8f9fa',
-          padding: 20
+          padding: 20,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#e5e7eb'
         }
       }
     },
     {
       name: 'Section',
       icon: Layout,
-      description: 'Page section',
+      description: 'Full-width page section',
       element: {
         type: 'section' as const,
         position: { x: 100, y: 100 },
-        size: { width: 400, height: 300 },
+        size: { width: 500, height: 300 },
         props: { 
           backgroundColor: '#ffffff',
-          padding: 40
+          padding: 40,
+          minHeight: 200
         }
       }
     },
     {
       name: 'Header',
       icon: Layout,
-      description: 'Page header',
+      description: 'Professional navigation header with full customization',
       element: {
         type: 'header' as const,
         position: { x: 100, y: 100 },
-        size: { width: 400, height: 80 },
-        props: { 
+        size: { width: 800, height: 80 },
+        props: {
           backgroundColor: '#1f2937',
           textColor: '#ffffff',
           logoText: 'Your Logo',
-          navItems: ['Home', 'About', 'Contact']
+          logoImageUrl: '',
+          logoWidth: 120,
+          logoHeight: 40,
+          logoPosition: 'left',
+          logoLink: '',
+          logoLinkTarget: '_self',
+          navItems: [
+            { label: 'Home', link: '#home', target: '_self' },
+            { label: 'About', link: '#about', target: '_self' },
+            { label: 'Contact', link: '#contact', target: '_self' }
+          ],
+          navFontSize: 16,
+          navFontWeight: 'medium',
+          navColor: '#ffffff',
+          navHoverColor: '#f3f4f6',
+          navHoverBackground: 'rgba(255, 255, 255, 0.1)',
+          navSpacing: 24,
+          navPadding: 12,
+          navBorderRadius: 6,
+          navTransition: 'all 0.3s ease',
+          navTransform: 'translateY(-2px)',
+          navShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          paddingTop: 16,
+          paddingRight: 24,
+          paddingBottom: 16,
+          paddingLeft: 24,
+          marginTop: 0,
+          marginRight: 0,
+          marginBottom: 0,
+          marginLeft: 0,
+          borderWidth: 0,
+          borderStyle: 'solid',
+          borderColor: 'transparent',
+          borderRadius: 0,
+          shadowX: 0,
+          shadowY: 2,
+          shadowBlur: 4,
+          shadowColor: 'rgba(0, 0, 0, 0.1)',
+          backgroundImage: '',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          overflow: 'visible',
+          minHeight: 80,
+          maxWidth: '100%',
+          linkUrl: '',
+          linkTarget: '_self',
+          linkRel: 'noopener noreferrer',
+          hoverBackgroundColor: '',
+          hoverTransform: '',
+          hoverShadowX: 0,
+          hoverShadowY: 0,
+          hoverShadowBlur: 0,
+          hoverShadowColor: 'transparent',
+          responsive: {
+            mobile: { 
+              paddingTop: 12, 
+              paddingRight: 16, 
+              paddingBottom: 12, 
+              paddingLeft: 16,
+              logoFontSize: 20,
+              navFontSize: 14,
+              navSpacing: 16,
+              navItems: [
+                { label: 'Home', link: '#home', target: '_self' },
+                { label: 'About', link: '#about', target: '_self' }
+              ]
+            },
+            tablet: { 
+              paddingTop: 14, 
+              paddingRight: 20, 
+              paddingBottom: 14, 
+              paddingLeft: 20,
+              logoFontSize: 22,
+              navFontSize: 15,
+              navSpacing: 20
+            }
+          }
         }
       }
     },
@@ -737,7 +826,7 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
       element: {
         type: 'footer' as const,
         position: { x: 100, y: 100 },
-        size: { width: 400, height: 120 },
+        size: { width: 500, height: 120 },
         props: { 
           backgroundColor: '#374151',
           textColor: '#ffffff',
@@ -746,135 +835,99 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
       }
     },
     {
+      name: 'Grid Layout',
+      icon: Grid,
+      description: 'CSS Grid container',
+      element: {
+        type: 'grid-layout' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 300 },
+        props: {
+          columns: 3,
+          gap: 16,
+          backgroundColor: '#f8f9fa',
+          padding: 20
+        }
+      }
+    },
+    {
+      name: 'Flexbox Layout',
+      icon: Layout,
+      description: 'Flexbox container',
+      element: {
+        type: 'flex-layout' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 200 },
+        props: {
+          direction: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 16,
+          backgroundColor: '#f8f9fa',
+          padding: 20
+        }
+      }
+    },
+
+    // Media Elements
+    {
       name: 'Video Player',
       icon: Video,
-      description: 'Video content',
+      description: 'Embedded video player',
       element: {
-        type: 'container' as const,
+        type: 'video-player' as const,
         position: { x: 100, y: 100 },
         size: { width: 400, height: 225 },
-        props: { 
-          backgroundColor: '#000000',
-          padding: 0
+        props: {
+          src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          title: 'Video Title',
+          autoplay: false,
+          controls: true,
+          backgroundColor: '#000000'
         }
       }
     },
     {
-      name: 'Form',
-      icon: FileText,
-      description: 'Contact form',
+      name: 'Audio Player',
+      icon: Volume2,
+      description: 'Audio player',
       element: {
-        type: 'container' as const,
+        type: 'audio-player' as const,
         position: { x: 100, y: 100 },
-        size: { width: 350, height: 300 },
-        props: { 
-          backgroundColor: '#ffffff',
-          padding: 20
+        size: { width: 350, height: 60 },
+        props: {
+          src: '/audio/sample.mp3',
+          title: 'Audio Title',
+          autoplay: false,
+          controls: true,
+          backgroundColor: '#f8f9fa'
         }
       }
     },
     {
-      name: 'Calendar',
-      icon: Calendar,
-      description: 'Date picker',
+      name: 'Image Gallery',
+      icon: Image,
+      description: 'Photo gallery with lightbox',
       element: {
-        type: 'container' as const,
+        type: 'image-gallery' as const,
         position: { x: 100, y: 100 },
-        size: { width: 300, height: 250 },
-        props: { 
-          backgroundColor: '#ffffff',
-          padding: 15
-        }
-      }
-    },
-    {
-      name: 'Timer',
-      icon: Clock,
-      description: 'Countdown timer',
-      element: {
-        type: 'container' as const,
-        position: { x: 100, y: 100 },
-        size: { width: 200, height: 100 },
-        props: { 
-          backgroundColor: '#1f2937',
-          padding: 20
-        }
-      }
-    },
-    {
-      name: 'Rating',
-      icon: Star,
-      description: 'Star rating',
-      element: {
-        type: 'container' as const,
-        position: { x: 100, y: 100 },
-        size: { width: 150, height: 30 },
-        props: { 
-          backgroundColor: '#ffffff',
-          padding: 5
-        }
-      }
-    },
-    {
-      name: 'Social Share',
-      icon: Share2,
-      description: 'Social media buttons',
-      element: {
-        type: 'container' as const,
-        position: { x: 100, y: 100 },
-        size: { width: 200, height: 50 },
-        props: { 
-          backgroundColor: '#f8f9fa',
-          padding: 10
-        }
-      }
-    },
-    {
-      name: 'Progress Bar',
-      icon: BarChart3,
-      description: 'Progress indicator',
-      element: {
-        type: 'container' as const,
-        position: { x: 100, y: 100 },
-        size: { width: 300, height: 20 },
-        props: { 
-          backgroundColor: '#e5e7eb',
-          padding: 0
-        }
-      }
-    },
-    {
-      name: 'Badge',
-      icon: BadgeIcon,
-      description: 'Status badge',
-      element: {
-        type: 'container' as const,
-        position: { x: 100, y: 100 },
-        size: { width: 80, height: 30 },
-        props: { 
-          backgroundColor: '#3b82f6',
-          padding: 5
-        }
-      }
-    },
-    {
-      name: 'Card',
-      icon: Square,
-      description: 'Content card',
-      element: {
-        type: 'container' as const,
-        position: { x: 100, y: 100 },
-        size: { width: 300, height: 200 },
-        props: { 
-          backgroundColor: '#ffffff',
-          padding: 20
+        size: { width: 400, height: 300 },
+        props: {
+          images: [
+            { src: '/placeholder-image.jpg', alt: 'Gallery 1' },
+            { src: '/placeholder-image.jpg', alt: 'Gallery 2' },
+            { src: '/placeholder-image.jpg', alt: 'Gallery 3' }
+          ],
+          columns: 3,
+          lightbox: true,
+          showCaptions: true
         }
       }
     },
     {
       name: 'Carousel',
       icon: Image,
-      description: 'Image carousel',
+      description: 'Image carousel slider',
       element: {
         type: 'carousel' as const,
         position: { x: 100, y: 100 },
@@ -886,14 +939,281 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
             { src: '/placeholder-image.jpg', alt: 'Slide 3' }
           ],
           autoplay: true,
-          showDots: true
+          showDots: true,
+          showArrows: true,
+          interval: 3000
+        }
+      }
+    },
+
+    // Interactive Elements
+    {
+      name: 'Accordion',
+      icon: FileText,
+      description: 'Collapsible content sections',
+      element: {
+        type: 'accordion' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 300 },
+        props: {
+          items: [
+            { title: 'Section 1', content: 'Content for section 1' },
+            { title: 'Section 2', content: 'Content for section 2' },
+            { title: 'Section 3', content: 'Content for section 3' }
+          ],
+          allowMultiple: false,
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
         }
       }
     },
     {
+      name: 'Tabs',
+      icon: Layout,
+      description: 'Tabbed content interface',
+      element: {
+        type: 'tabs' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 300 },
+        props: {
+          tabs: [
+            { label: 'Tab 1', content: 'Content for tab 1' },
+            { label: 'Tab 2', content: 'Content for tab 2' },
+            { label: 'Tab 3', content: 'Content for tab 3' }
+          ],
+          activeTab: 0,
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+    {
+      name: 'Modal',
+      icon: Square,
+      description: 'Popup modal dialog',
+      element: {
+        type: 'modal' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 300 },
+        props: {
+          title: 'Modal Title',
+          content: 'Modal content goes here',
+          showCloseButton: true,
+          overlay: true,
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+    {
+      name: 'Dropdown',
+      icon: Layout,
+      description: 'Dropdown menu',
+      element: {
+        type: 'dropdown' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 200, height: 40 },
+        props: {
+          label: 'Select Option',
+          options: ['Option 1', 'Option 2', 'Option 3'],
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+
+    // Data Display Elements
+    {
+      name: 'Data Table',
+      icon: BarChart3,
+      description: 'Data table with sorting',
+      element: {
+        type: 'data-table' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 500, height: 300 },
+        props: {
+          headers: ['Name', 'Email', 'Role'],
+          rows: [
+            ['John Doe', 'john@example.com', 'Admin'],
+            ['Jane Smith', 'jane@example.com', 'User']
+          ],
+          sortable: true,
+          striped: true,
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+    {
+      name: 'Chart',
+      icon: PieChart,
+      description: 'Interactive chart',
+      element: {
+        type: 'chart' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 300 },
+        props: {
+          type: 'bar',
+          data: [
+            { label: 'Jan', value: 100 },
+            { label: 'Feb', value: 150 },
+            { label: 'Mar', value: 200 }
+          ],
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+    {
+      name: 'Progress Bar',
+      icon: BarChart3,
+      description: 'Progress indicator',
+      element: {
+        type: 'progress-bar' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 300, height: 20 },
+        props: {
+          value: 65,
+          max: 100,
+          label: 'Progress',
+          showPercentage: true,
+          backgroundColor: '#e5e7eb',
+          fillColor: '#3b82f6'
+        }
+      }
+    },
+    {
+      name: 'Stats Card',
+      icon: TrendingUp,
+      description: 'Statistics display card',
+      element: {
+        type: 'stats-card' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 200, height: 120 },
+        props: {
+          title: 'Total Users',
+          value: '1,234',
+          change: '+12%',
+          trend: 'up',
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+
+    // Social & Communication
+    {
+      name: 'Social Media Links',
+      icon: Share2,
+      description: 'Social media buttons',
+      element: {
+        type: 'social-links' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 200, height: 50 },
+        props: {
+          platforms: ['facebook', 'twitter', 'instagram', 'linkedin'],
+          style: 'rounded',
+          size: 'medium',
+          backgroundColor: 'transparent'
+        }
+      }
+    },
+    {
+      name: 'WhatsApp Button',
+      icon: MessageCircle,
+      description: 'WhatsApp contact button',
+      element: {
+        type: 'whatsapp-button' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 160, height: 48 },
+        props: {
+          phoneNumber: '+1234567890',
+          message: 'Hello!',
+          backgroundColor: '#25d366',
+          textColor: '#ffffff'
+        }
+      }
+    },
+    {
+      name: 'Contact Info',
+      icon: Phone,
+      description: 'Contact information display',
+      element: {
+        type: 'contact-info' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 300, height: 150 },
+        props: {
+          phone: '+1 (555) 123-4567',
+          email: 'contact@example.com',
+          address: '123 Main St, City, State',
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+
+    // Forms & Inputs
+    {
+      name: 'Contact Form',
+      icon: FileText,
+      description: 'Contact form with validation',
+      element: {
+        type: 'contact-form' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 500 },
+        props: {
+          title: 'Contact Us',
+          fields: [
+            { type: 'text', name: 'name', label: 'Name', required: true },
+            { type: 'email', name: 'email', label: 'Email', required: true },
+            { type: 'textarea', name: 'message', label: 'Message', required: true }
+          ],
+          buttonText: 'Send Message',
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+    {
+      name: 'Newsletter Signup',
+      icon: Mail,
+      description: 'Email newsletter signup',
+      element: {
+        type: 'newsletter' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 400, height: 120 },
+        props: {
+          title: 'Subscribe to Newsletter',
+          subtitle: 'Get the latest updates',
+          placeholder: 'Enter your email',
+          buttonText: 'Subscribe',
+          backgroundColor: '#f8f9fa',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+    {
+      name: 'Search Bar',
+      icon: Search,
+      description: 'Search input with button',
+      element: {
+        type: 'search-bar' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 300, height: 40 },
+        props: {
+          placeholder: 'Search...',
+          buttonText: 'Search',
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
+        }
+      }
+    },
+
+    // Content & Marketing
+    {
       name: 'Hero Section',
       icon: Layout,
-      description: 'Hero banner',
+      description: 'Hero banner with CTA',
       element: {
         type: 'hero' as const,
         position: { x: 100, y: 100 },
@@ -903,14 +1223,15 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
           subtitle: 'This is a hero section',
           buttonText: 'Get Started',
           backgroundImage: '/placeholder-image.jpg',
-          overlay: true
+          overlay: true,
+          textColor: '#ffffff'
         }
       }
     },
     {
       name: 'Pricing Card',
       icon: Square,
-      description: 'Pricing plan',
+      description: 'Pricing plan card',
       element: {
         type: 'pricing-card' as const,
         position: { x: 100, y: 100 },
@@ -921,7 +1242,9 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
           period: '/month',
           features: ['Feature 1', 'Feature 2', 'Feature 3'],
           buttonText: 'Get Started',
-          popular: false
+          popular: false,
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
         }
       }
     },
@@ -938,42 +1261,125 @@ const ElementLibrary = ({ onAddElement, category }: ElementLibraryProps) => {
           author: 'John Doe',
           role: 'CEO, Company',
           avatar: '/placeholder-avatar.jpg',
-          rating: 5
+          rating: 5,
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
         }
       }
     },
     {
-      name: 'Contact Form',
-      icon: FileText,
-      description: 'Contact form',
+      name: 'Feature List',
+      icon: Square,
+      description: 'Feature list with icons',
       element: {
-        type: 'contact-form' as const,
+        type: 'feature-list' as const,
         position: { x: 100, y: 100 },
-        size: { width: 400, height: 500 },
+        size: { width: 400, height: 300 },
         props: {
-          title: 'Contact Us',
-          fields: [
-            { type: 'text', name: 'name', label: 'Name', required: true },
-            { type: 'email', name: 'email', label: 'Email', required: true },
-            { type: 'textarea', name: 'message', label: 'Message', required: true }
+          title: 'Features',
+          features: [
+            { icon: '✓', text: 'Feature 1', description: 'Description 1' },
+            { icon: '✓', text: 'Feature 2', description: 'Description 2' },
+            { icon: '✓', text: 'Feature 3', description: 'Description 3' }
           ],
-          buttonText: 'Send Message'
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb'
         }
       }
     },
     {
-      name: 'Newsletter',
-      icon: Mail,
-      description: 'Newsletter signup',
+      name: 'Call to Action',
+      icon: Square,
+      description: 'CTA section',
       element: {
-        type: 'newsletter' as const,
+        type: 'cta' as const,
         position: { x: 100, y: 100 },
-        size: { width: 400, height: 120 },
+        size: { width: 400, height: 200 },
         props: {
-          title: 'Subscribe to Newsletter',
-          subtitle: 'Get the latest updates',
-          placeholder: 'Enter your email',
-          buttonText: 'Subscribe'
+          title: 'Ready to Get Started?',
+          subtitle: 'Join thousands of satisfied customers',
+          buttonText: 'Start Free Trial',
+          backgroundColor: '#3b82f6',
+          textColor: '#ffffff'
+        }
+      }
+    },
+
+    // Utility Elements
+    {
+      name: 'Timer',
+      icon: Clock,
+      description: 'Countdown timer',
+      element: {
+        type: 'timer' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 200, height: 100 },
+        props: {
+          targetDate: '2024-12-31T23:59:59',
+          format: 'DD:HH:MM:SS',
+          backgroundColor: '#1f2937',
+          textColor: '#ffffff'
+        }
+      }
+    },
+    {
+      name: 'Rating',
+      icon: Star,
+      description: 'Star rating display',
+      element: {
+        type: 'rating' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 150, height: 30 },
+        props: {
+          value: 4.5,
+          max: 5,
+          showValue: true,
+          color: '#fbbf24'
+        }
+      }
+    },
+    {
+      name: 'Badge',
+      icon: BadgeIcon,
+      description: 'Status badge',
+      element: {
+        type: 'badge' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 80, height: 30 },
+        props: {
+          text: 'New',
+          color: '#3b82f6',
+          backgroundColor: '#dbeafe',
+          size: 'medium'
+        }
+      }
+    },
+    {
+      name: 'Divider',
+      icon: Square,
+      description: 'Visual separator',
+      element: {
+        type: 'divider' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 300, height: 2 },
+        props: {
+          style: 'solid',
+          color: '#e5e7eb',
+          thickness: 2
+        }
+      }
+    },
+    {
+      name: 'Spacer',
+      icon: Square,
+      description: 'Flexible spacing',
+      element: {
+        type: 'spacer' as const,
+        position: { x: 100, y: 100 },
+        size: { width: 100, height: 50 },
+        props: {
+          height: 50,
+          backgroundColor: 'transparent'
         }
       }
     }

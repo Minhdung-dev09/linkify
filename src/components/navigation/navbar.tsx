@@ -278,7 +278,7 @@ const Navbar = () => {
                                             <DropdownMenuItem asChild>
                                                 <Link href="/admin" className="flex items-center gap-2">
                                                     <Shield className="h-4 w-4" />
-                                                    Admin Dashboard
+                                                    Trang quản trị
                                                 </Link>
                                             </DropdownMenuItem>
                                         )}

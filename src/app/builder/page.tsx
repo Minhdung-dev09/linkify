@@ -43,7 +43,7 @@ import { getAuthHeaders } from "@/lib/auth";
 
 export interface BuilderElement {
   id: string;
-  type: 'text' | 'image' | 'button' | 'section' | 'container' | 'heading' | 'paragraph' | 'spacer' | 'header' | 'footer' | 'carousel' | 'hero' | 'pricing-card' | 'testimonial' | 'feature-list' | 'cta' | 'contact-form' | 'newsletter';
+  type: 'text' | 'image' | 'button' | 'section' | 'container' | 'heading' | 'paragraph' | 'spacer' | 'header' | 'footer' | 'carousel' | 'hero' | 'pricing-card' | 'testimonial' | 'feature-list' | 'cta' | 'contact-form' | 'newsletter' | 'grid-layout' | 'flex-layout' | 'video-player' | 'audio-player' | 'image-gallery' | 'accordion' | 'tabs' | 'modal' | 'dropdown' | 'data-table' | 'chart' | 'progress-bar' | 'stats-card' | 'social-links' | 'whatsapp-button' | 'contact-info' | 'search-bar' | 'timer' | 'rating' | 'badge' | 'divider';
   position: { x: number; y: number };
   size: { width: number; height: number };
   props: Record<string, any>;

@@ -73,11 +73,11 @@ const MobileNavbar = () => {
                             {isSignedIn ? (
                                 <>
                                     <Link href="/dashboard" className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                                        Dashboard
+                                        Bảng điều khiển
                                     </Link>
                                     {isAdmin && (
                                         <Link href="/admin" className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                                            Admin
+                                            Trang quản trị
                                         </Link>
                                     )}
                                     <button
@@ -90,16 +90,16 @@ const MobileNavbar = () => {
                                         onClick={() => { clearToken(); window.location.href = "/"; }}
                                         className={buttonVariants({ variant: "ghost", className: "w-full" })}
                                     >
-                                        Sign out
+                                        Đăng xuất
                                     </button>
                                 </>
                             ) : (
                                 <>
                                     <Link href="/auth/sign-in" className={buttonVariants({ variant: "outline", className: "w-full" })}>
-                                        Sign In
+                                        Đăng nhập
                                     </Link>
                                     <Link href="/auth/sign-up" className={buttonVariants({ className: "w-full" })}>
-                                        Sign Up
+                                        Đăng ký
                                     </Link>
                                 </>
                             )}
