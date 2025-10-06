@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import {
   Layout
 } from "lucide-react";
 import { BuilderPage } from "@/app/builder/page";
+import { getAuthHeaders } from "@/lib/auth";
 
 interface TemplateGalleryProps {
   onClose: () => void;
@@ -29,6 +30,42 @@ const TemplateGallery = ({ onClose, onSelectTemplate }: TemplateGalleryProps) =>
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [activeTab, setActiveTab] = useState<'yours' | 'catalog'>("yours");
+  const [landingPages, setLandingPages] = useState<any[]>([]);
+  const [lpPage, setLpPage] = useState(1);
+  const perPage = 9;
+  const [isLoadingYours, setIsLoadingYours] = useState(false);
+  const [drafts, setDrafts] = useState<BuilderPage[]>([]);
+
+  useEffect(() => {
+    const fetchYours = async () => {
+      try {
+        setIsLoadingYours(true);
+        const headers = getAuthHeaders();
+        const res = await fetch('/api/landing-pages', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setLandingPages(data.landingPages || []);
+        }
+      } catch (_) {
+      } finally {
+        setIsLoadingYours(false);
+      }
+    };
+
+    const loadDrafts = () => {
+      try {
+        const raw = localStorage.getItem('builder_drafts');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) setDrafts(arr);
+        }
+      } catch (_) {}
+    };
+
+    fetchYours();
+    loadDrafts();
+  }, []);
 
   const templates: Array<BuilderPage & { 
     id: string; 
@@ -259,7 +296,7 @@ const TemplateGallery = ({ onClose, onSelectTemplate }: TemplateGalleryProps) =>
             <Layout className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-semibold">Template Gallery</h1>
             <Badge variant="secondary" className="text-xs">
-              {filteredTemplates.length} templates
+              {(landingPages?.length || 0) + (drafts?.length || 0)} items
             </Badge>
           </div>
         </div>
@@ -305,163 +342,131 @@ const TemplateGallery = ({ onClose, onSelectTemplate }: TemplateGalleryProps) =>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-sm font-medium mb-2">Categories</h3>
-              <div className="space-y-1">
-                {categories.map(category => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.id ? 'primary' : 'ghost'}
-                    size="sm"
-                    className="w-full justify-between"
-                    onClick={() => setSelectedCategory(category.id)}
-                  >
-                    <span>{category.name}</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {category.count}
-                    </Badge>
-                  </Button>
-                ))}
-              </div>
-            </div>
+            
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto p-6">
-          {viewMode === 'grid' ? (
+          <div className="mt-2">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Bản nháp</h3>
+                  {drafts.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">Chưa có bản nháp</div>
+                  ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTemplates.map(template => (
+                      {drafts.map((d, idx) => (
                 <Card 
-                  key={template.id}
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group"
-                  onClick={() => onSelectTemplate(template)}
-                >
-                  <div className="relative">
+                        key={idx}
+                        className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                        onClick={() => onSelectTemplate(d)}
+                      >
                     <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
                       <div className="text-center text-muted-foreground">
                         <Layout className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <div className="text-sm">Template Preview</div>
-                      </div>
-                    </div>
-                    
-                    {template.isPremium && (
-                      <Badge className="absolute top-2 right-2 bg-yellow-500">
-                        Premium
-                      </Badge>
-                    )}
+                            <div className="text-sm">Draft Preview</div>
                   </div>
-                  
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{template.name}</h3>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle preview
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
                         </div>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium truncate">{d.title || 'Draft'}</h3>
+                            <Badge variant="outline" className="text-xs">Draft</Badge>
                       </div>
-                      
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {template.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-1">
-                        {template.tags.slice(0, 3).map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+                          <p className="text-xs text-muted-foreground truncate mt-1">{d.elements?.length || 0} elements</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredTemplates.map(template => (
-                <Card 
-                  key={template.id}
-                  className="cursor-pointer hover:shadow-md transition-all duration-200"
-                  onClick={() => onSelectTemplate(template)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-16 bg-muted rounded-lg flex items-center justify-center">
-                        <Layout className="h-8 w-8 opacity-50" />
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Đã lưu</h3>
+                  {isLoadingYours ? (
+                    <div className="text-sm text-muted-foreground">Đang tải...</div>
+                  ) : (landingPages.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">Chưa có landing page nào</div>
+                  ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {landingPages.slice((lpPage-1)*perPage, lpPage*perPage).map(lp => (
+                      <Card 
+                        key={lp.slug}
+                        className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                        onClick={async () => {
+                          try {
+                            const headers = getAuthHeaders();
+                            const res = await fetch(`/api/landing-pages/${lp.slug}`, { headers });
+                            if (res.ok) {
+                              const data = await res.json();
+                              if (data?.landingPage) {
+                                onSelectTemplate({
+                                  id: data.landingPage.slug,
+                                  title: data.landingPage.title,
+                                  elements: data.landingPage.elements || [],
+                                  settings: data.landingPage.settings || { backgroundColor: '#ffffff', maxWidth: 1200, padding: 20 }
+                                } as any);
+                              }
+                            }
+                          } catch (_) {}
+                        }}
+                      >
+                        <div className="aspect-video bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
+                          {lp.thumbnail ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={lp.thumbnail} alt={lp.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-center text-muted-foreground">
+                              <Layout className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                              <div className="text-sm">No Preview</div>
                       </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium">{template.name}</h3>
-                          {template.isPremium && (
-                            <Badge className="bg-yellow-500 text-xs">Premium</Badge>
                           )}
                         </div>
-                        
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {template.description}
-                        </p>
-                        
-                        <div className="flex flex-wrap gap-1">
-                          {template.tags.map(tag => (
-                            <Badge key={tag} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
+                        <CardContent className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-medium truncate">{lp.title}</h3>
+                              <Badge variant="secondary" className="text-xs">/{lp.slug}</Badge>
                       </div>
-                      
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Handle preview
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectTemplate(template);
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
+                              <Button asChild size="sm" variant="outline">
+                                <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/${lp.slug}`} target="_blank" rel="noopener noreferrer">Xem</a>
                         </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          )}
 
-          {filteredTemplates.length === 0 && (
-            <div className="text-center py-12">
-              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">No templates found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search or filter criteria
-              </p>
+                      {Math.ceil(landingPages.length / perPage) > 1 && (
+                        <div className="flex items-center justify-center gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={lpPage === 1}
+                            onClick={() => setLpPage(p => Math.max(1, p - 1))}
+                          >
+                            Trang trước
+                          </Button>
+                          <div className="text-xs text-muted-foreground">
+                            Trang {lpPage} / {Math.ceil(landingPages.length / perPage)}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={lpPage >= Math.ceil(landingPages.length / perPage)}
+                            onClick={() => setLpPage(p => Math.min(Math.ceil(landingPages.length / perPage), p + 1))}
+                          >
+                            Trang sau
+                          </Button>
             </div>
           )}
-        </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   );
