@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -84,6 +85,24 @@ export default function BuilderPage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Lazy-load html2canvas for thumbnail capture
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const mod = await import('html2canvas');
+        if (mounted) {
+          (window as any).html2canvas = mod.default || (mod as any);
+        }
+      } catch (e) {
+        // ignore if not available
+      }
+    })();
+    return () => {
+      mounted = false;
+    }
+  }, []);
 
   // History management
   const saveToHistory = useCallback((newPage: BuilderPage) => {
@@ -207,6 +226,10 @@ export default function BuilderPage() {
       <div className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/">← Trang chủ</Link>
+            </Button>
+            <div className="w-px h-5 bg-border" />
             <Palette className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-semibold">Page Builder</h1>
           </div>
@@ -381,7 +404,7 @@ export default function BuilderPage() {
       </div>
 
       {/* Save Landing Page Dialog */}
-      <SaveLandingPageDialog
+          <SaveLandingPageDialog
         isOpen={showSaveDialog}
         onClose={() => setShowSaveDialog(false)}
         onSave={async (data) => {
@@ -391,10 +414,20 @@ export default function BuilderPage() {
             console.log('Token from localStorage:', localStorage.getItem('token'));
             console.log('Token from auth_token:', localStorage.getItem('auth_token'));
             
+            // Optionally capture thumbnail via html2canvas if available
+            let thumbnail: string | undefined;
+            try {
+              const el = canvasRef.current;
+              if (el && (window as any).html2canvas) {
+                const canvas = await (window as any).html2canvas(el, { backgroundColor: currentPage.settings.backgroundColor });
+                thumbnail = canvas.toDataURL('image/jpeg', 0.7);
+              }
+            } catch (_) {}
+
             const response = await fetch('/api/landing-pages', {
               method: 'POST',
               headers,
-              body: JSON.stringify(data),
+              body: JSON.stringify({ ...data, thumbnail }),
             });
 
             if (!response.ok) {
