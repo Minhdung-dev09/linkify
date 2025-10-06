@@ -26,6 +26,10 @@ import {
   Layers
 } from "lucide-react";
 import { BuilderElement } from "@/app/builder/page";
+import CarouselProperties from "@/components/builder/properties/CarouselProperties";
+import VideoPlayerProperties from "@/components/builder/properties/VideoPlayerProperties";
+import AudioPlayerProperties from "@/components/builder/properties/AudioPlayerProperties";
+import FooterProperties from "@/components/builder/properties/FooterProperties";
 
 interface PropertiesPanelProps {
   selectedElement: BuilderElement | null;
@@ -310,21 +314,12 @@ const PropertiesPanel = ({
           </div>
         );
 
+      case 'carousel':
+        return <CarouselProperties selectedElement={selectedElement} updateProps={updateProps} />;
+
 
       case 'footer':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="copyright">Copyright Text</Label>
-              <Input
-                id="copyright"
-                value={selectedElement.props.copyright || ''}
-                onChange={(e) => updateProps({ copyright: e.target.value })}
-                placeholder="© 2024 Your Company"
-              />
-            </div>
-          </div>
-        );
+        return <FooterProperties selectedElement={selectedElement} updateProps={updateProps} />;
 
       case 'hero':
         return (
@@ -923,28 +918,12 @@ const PropertiesPanel = ({
         );
 
       case 'video-player':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="videoSrc">Video URL</Label>
-              <Input
-                id="videoSrc"
-                value={selectedElement.props.src || ''}
-                onChange={(e) => updateProps({ src: e.target.value })}
-                placeholder="https://www.youtube.com/embed/..."
-              />
-            </div>
-            <div>
-              <Label htmlFor="videoTitle">Title</Label>
-              <Input
-                id="videoTitle"
-                value={selectedElement.props.title || ''}
-                onChange={(e) => updateProps({ title: e.target.value })}
-                placeholder="Video Title"
-              />
-            </div>
-          </div>
-        );
+        return <VideoPlayerProperties selectedElement={selectedElement} updateProps={updateProps} />;
+          
+
+      case 'audio-player':
+        return <AudioPlayerProperties selectedElement={selectedElement} updateProps={updateProps} />;
+          
 
       case 'progress-bar':
         return (
