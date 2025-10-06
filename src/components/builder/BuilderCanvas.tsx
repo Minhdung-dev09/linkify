@@ -22,6 +22,7 @@ import {
   Link
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CanvasCarousel from "@/components/builder/renderers/CanvasCarousel";
 
 interface BuilderCanvasProps {
   page: BuilderPage;
@@ -32,6 +33,8 @@ interface BuilderCanvasProps {
   onDuplicateElement: (elementId: string) => void;
   deviceMode: 'desktop' | 'tablet' | 'mobile';
 }
+
+ 
 
 const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   page,
@@ -54,6 +57,8 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   const [showFontSizePicker, setShowFontSizePicker] = useState<string | null>(null);
   const [showLinkInput, setShowLinkInput] = useState<string | null>(null);
   const canvasScrollRef = useRef<HTMLDivElement>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const pendingMoveRef = useRef<null | { type: 'drag' | 'resize'; elementId: string; deltaX: number; deltaY: number; handle?: string }>(null);
 
   // Smart scroll detection and management
   useEffect(() => {
@@ -108,66 +113,78 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
 
-      const element = page.elements.find(el => el.id === dragElement);
-      if (!element) return;
+      // Throttle updates with rAF to reduce re-renders while dragging
+      pendingMoveRef.current = {
+        type: isResizing ? 'resize' : 'drag',
+        elementId: dragElement,
+        deltaX,
+        deltaY,
+        handle: resizeHandle || undefined
+      };
 
-      if (isDragging && !isResizing) {
-        // Handle dragging
-        onUpdateElement(dragElement, {
-          position: {
-            x: Math.max(0, element.position.x + deltaX),
-            y: Math.max(0, element.position.y + deltaY)
+      if (rafIdRef.current == null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          const payload = pendingMoveRef.current;
+          rafIdRef.current = null;
+          pendingMoveRef.current = null;
+          if (!payload) return;
+
+          const element = page.elements.find(el => el.id === payload.elementId);
+          if (!element) return;
+
+          if (payload.type === 'drag') {
+            onUpdateElement(payload.elementId, {
+              position: {
+                x: Math.max(0, element.position.x + payload.deltaX),
+                y: Math.max(0, element.position.y + payload.deltaY)
+              }
+            });
+          } else if (payload.type === 'resize' && payload.handle) {
+            const newSize = { ...element.size } as { width: number; height: number };
+            const newPosition = { ...element.position } as { x: number; y: number };
+            switch (payload.handle) {
+              case 'nw':
+                newSize.width = Math.max(20, element.size.width - payload.deltaX);
+                newSize.height = Math.max(20, element.size.height - payload.deltaY);
+                newPosition.x = element.position.x + payload.deltaX;
+                newPosition.y = element.position.y + payload.deltaY;
+                break;
+              case 'ne':
+                newSize.width = Math.max(20, element.size.width + payload.deltaX);
+                newSize.height = Math.max(20, element.size.height - payload.deltaY);
+                newPosition.y = element.position.y + payload.deltaY;
+                break;
+              case 'sw':
+                newSize.width = Math.max(20, element.size.width - payload.deltaX);
+                newSize.height = Math.max(20, element.size.height + payload.deltaY);
+                newPosition.x = element.position.x + payload.deltaX;
+                break;
+              case 'se':
+                newSize.width = Math.max(20, element.size.width + payload.deltaX);
+                newSize.height = Math.max(20, element.size.height + payload.deltaY);
+                break;
+              case 'n':
+                newSize.height = Math.max(20, element.size.height - payload.deltaY);
+                newPosition.y = element.position.y + payload.deltaY;
+                break;
+              case 's':
+                newSize.height = Math.max(20, element.size.height + payload.deltaY);
+                break;
+              case 'w':
+                newSize.width = Math.max(20, element.size.width - payload.deltaX);
+                newPosition.x = element.position.x + payload.deltaX;
+                break;
+              case 'e':
+                newSize.width = Math.max(20, element.size.width + payload.deltaX);
+                break;
+            }
+            onUpdateElement(payload.elementId, { size: newSize, position: newPosition });
           }
-        });
-      } else if (isResizing && resizeHandle) {
-        // Handle resizing
-        const newSize = { ...element.size };
-        const newPosition = { ...element.position };
 
-        switch (resizeHandle) {
-          case 'nw': // Top-left
-            newSize.width = Math.max(20, element.size.width - deltaX);
-            newSize.height = Math.max(20, element.size.height - deltaY);
-            newPosition.x = element.position.x + deltaX;
-            newPosition.y = element.position.y + deltaY;
-            break;
-          case 'ne': // Top-right
-            newSize.width = Math.max(20, element.size.width + deltaX);
-            newSize.height = Math.max(20, element.size.height - deltaY);
-            newPosition.y = element.position.y + deltaY;
-            break;
-          case 'sw': // Bottom-left
-            newSize.width = Math.max(20, element.size.width - deltaX);
-            newSize.height = Math.max(20, element.size.height + deltaY);
-            newPosition.x = element.position.x + deltaX;
-            break;
-          case 'se': // Bottom-right
-            newSize.width = Math.max(20, element.size.width + deltaX);
-            newSize.height = Math.max(20, element.size.height + deltaY);
-            break;
-          case 'n': // Top
-            newSize.height = Math.max(20, element.size.height - deltaY);
-            newPosition.y = element.position.y + deltaY;
-            break;
-          case 's': // Bottom
-            newSize.height = Math.max(20, element.size.height + deltaY);
-            break;
-          case 'w': // Left
-            newSize.width = Math.max(20, element.size.width - deltaX);
-            newPosition.x = element.position.x + deltaX;
-            break;
-          case 'e': // Right
-            newSize.width = Math.max(20, element.size.width + deltaX);
-            break;
-        }
-
-        onUpdateElement(dragElement, {
-          size: newSize,
-          position: newPosition
+          // Update anchor for next frame
+          setDragStart(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
         });
       }
-
-      setDragStart({ x: e.clientX, y: e.clientY });
     };
 
     const handleGlobalMouseUp = () => {
@@ -185,6 +202,9 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
+      if (rafIdRef.current != null) cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+      pendingMoveRef.current = null;
     };
   }, [isDragging, isResizing, dragElement, dragStart, resizeHandle, page.elements, onUpdateElement]);
 
@@ -594,32 +614,82 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                    </div>
                  )}
 
-                 {element.type === 'footer' && (
-                   <div
-                     className="w-full h-full flex items-center justify-center px-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#374151',
-                       color: element.props.textColor || '#ffffff'
-                     }}
-                   >
-                     <div className="text-sm">{element.props.copyright || '© 2024 Your Company'}</div>
-                   </div>
-                 )}
+                {element.type === 'footer' && (
+                  <div
+                    className="w-full h-full"
+                    style={{
+                      backgroundColor: element.props.backgroundColor || '#374151',
+                      color: element.props.textColor || '#ffffff',
+                      paddingTop: element.props.paddingY ?? 16,
+                      paddingBottom: element.props.paddingY ?? 16,
+                      paddingLeft: element.props.paddingX ?? 24,
+                      paddingRight: element.props.paddingX ?? 24
+                    }}
+                  >
+                    <div className="w-full h-full flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="text-sm whitespace-pre-line">
+                          {element.props.copyright || '© 2025 Your Company'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap gap-3 justify-center text-sm">
+                            {(element.props.links || []).map((ln: any, idx: number) => (
+                              <span key={idx} className="underline cursor-pointer" onClick={(e) => {
+                                e.stopPropagation();
+                                if (ln?.href) {
+                                  if (ln?.target === '_blank') {
+                                    window.open(ln.href, '_blank', 'noopener,noreferrer');
+                                  } else {
+                                    window.location.href = ln.href;
+                                  }
+                                }
+                              }}>
+                                {typeof ln === 'string' ? ln : (ln?.label || 'Link')}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="text-right text-sm min-w-[180px]">
+                          {element.props.address && <div>{element.props.address}</div>}
+                          {element.props.phone && <div>{element.props.phone}</div>}
+                          {element.props.email && <div>{element.props.email}</div>}
+                        </div>
+                      </div>
 
-                 {element.type === 'carousel' && (
-                   <div className="w-full h-full relative overflow-hidden rounded-lg bg-gray-200">
-                     <div className="absolute inset-0 flex items-center justify-center">
-                       <div className="text-gray-500 text-sm">Carousel ({element.props.images?.length || 0} slides)</div>
-                     </div>
-                     {element.props.showDots && (
-                       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-                         {(element.props.images || []).map((_: any, index: number) => (
-                           <div key={index} className="w-2 h-2 bg-white rounded-full opacity-50"></div>
-                         ))}
-                       </div>
-                     )}
-                   </div>
-                 )}
+                      {element.props.showMap && element.props.mapEmbedUrl && (() => {
+                        let embedUrl = String(element.props.mapEmbedUrl || '').trim();
+                        if (embedUrl.toLowerCase().includes('<iframe')) {
+                          const m = embedUrl.match(/src=["']([^"']+)["']/i);
+                          if (m && m[1]) embedUrl = m[1];
+                        }
+                        // normalize protocol slashes (e.g., https:/ -> https://)
+                        if (/^https?:\/(?!\/)/i.test(embedUrl)) {
+                          embedUrl = embedUrl.replace(/^https?:\//i, (p) => p + '/');
+                        }
+                        if (!/^https?:\/\//i.test(embedUrl)) {
+                          // if still not an absolute URL, don't render
+                          return null;
+                        }
+                        return (
+                        <div className="w-full overflow-hidden rounded-md border border-white/10">
+                          <iframe
+                            src={embedUrl}
+                            className="w-full"
+                            style={{ height: `${element.props.mapHeight ?? 220}px`, border: 0, pointerEvents: 'none' }}
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {element.type === 'carousel' && (
+                  <CanvasCarousel element={element} />
+                )}
 
                  {element.type === 'hero' && (
                    <div
@@ -902,19 +972,82 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                    </div>
                  )}
 
-                 {element.type === 'video-player' && (
-                   <div
-                     className="w-full h-full bg-black rounded-lg flex items-center justify-center"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#000000'
-                     }}
-                   >
-                     <div className="text-white text-center">
-                       <div className="text-lg mb-2">🎥</div>
-                       <div className="text-sm">{element.props.title || 'Video Player'}</div>
-                     </div>
-                   </div>
-                 )}
+                  {element.type === 'video-player' && (
+                    <div className="w-full h-full rounded-lg overflow-hidden bg-black">
+                      {(() => {
+                        const src: string = element.props.src || '';
+                        const autoplay = element.props.autoplay ? 1 : 0;
+                        const controls = element.props.controls === false ? 0 : 1;
+                        const loop = element.props.loop ? 1 : 0;
+                        const muted = element.props.muted ? 1 : 0;
+                        const start = parseInt(element.props.start || 0);
+                        const objectFit = element.props.objectFit || 'cover';
+                        const poster = element.props.poster;
+                        const isMoving = isDragging || isResizing;
+
+                        const toYouTubeEmbed = (url: string) => {
+                          try {
+                            if (!url) return null;
+                            const ytShort = url.match(/^https?:\/\/youtu\.be\/([\w-]{6,})/i);
+                            if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+                            const ytWatch = url.match(/[?&]v=([\w-]{6,})/i);
+                            if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
+                            const ytEmbed = url.match(/^https?:\/\/(www\.)?youtube\.com\/embed\/([\w-]{6,})/i);
+                            if (ytEmbed) return `https://www.youtube.com/embed/${ytEmbed[2]}`;
+                            return null;
+                          } catch { return null; }
+                        };
+
+                        const yt = toYouTubeEmbed(src);
+                        if (yt && !isMoving) {
+                          const params = new URLSearchParams({ autoplay: String(autoplay), controls: String(controls), loop: String(loop), mute: String(muted), start: String(start) });
+                          const embedUrl = `${yt}?${params.toString()}`;
+                          return (
+                            <div className="relative w-full h-full" style={{ backgroundColor: '#000' }}>
+                              <iframe
+                                src={embedUrl}
+                                title={element.props.title || 'YouTube video'}
+                                className="absolute inset-0 w-full h-full"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                style={{ pointerEvents: 'none' }}
+                              />
+                            </div>
+                          );
+                        }
+
+                        // If dragging/resizing, show lightweight placeholder (faster drag)
+                        if (isMoving) {
+                          return (
+                            <div className="relative w-full h-full" style={{ backgroundColor: '#000' }}>
+                              {poster ? (
+                                <img src={poster} alt="poster" className="absolute inset-0 w-full h-full" style={{ objectFit }} />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-white/70 text-sm">Video (dragging)</div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        // Fallback to native video for direct files (mp4...)
+                        return (
+                          <div className="relative w-full h-full" style={{ backgroundColor: '#000' }}>
+                            <video
+                              src={src}
+                              className="absolute inset-0 w-full h-full"
+                              style={{ objectFit, pointerEvents: 'none' }}
+                              controls={element.props.controls !== false}
+                              autoPlay={!!element.props.autoplay}
+                              loop={!!element.props.loop}
+                              muted={!!element.props.muted}
+                              poster={poster}
+                            />
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
 
                  {element.type === 'audio-player' && (
                    <div
