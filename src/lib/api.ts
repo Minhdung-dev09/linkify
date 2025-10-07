@@ -240,6 +240,121 @@ export async function apiReadAllNotifications(token: string): Promise<{ success:
   return data as { success: boolean };
 }
 
+// Blogs - Public
+export interface ApiBlog {
+  _id?: string;
+  slug: string;
+  title: string;
+  description?: string;
+  image?: string;
+  cover_image_credit?: { text?: string; url?: string };
+  date_published?: string;
+  updated_at?: string;
+  published?: boolean;
+  read_time_minutes?: number;
+  tags?: string[];
+  category?: string;
+  lang?: string;
+  author?: { name: string; image?: string; bio?: string; socials?: { twitter?: string; linkedin?: string; website?: string } };
+  seo?: {
+    title?: string; description?: string; og_image?: string; canonical_url?: string;
+    og_type?: string; og_site_name?: string; meta_keywords?: string[];
+    twitter_card?: string; twitter_site?: string; twitter_creator?: string;
+    noindex?: boolean; nofollow?: boolean; structured_data?: any;
+  };
+  content_markdown?: string;
+  content_html?: string;
+}
+
+export async function apiListBlogs(params: { q?: string; tag?: string; category?: string; lang?: string; page?: number; limit?: number } = {}): Promise<{ items: ApiBlog[]; page: number; limit: number; total: number }>{
+  const query = new URLSearchParams();
+  if (params.q) query.set("q", params.q);
+  if (params.tag) query.set("tag", params.tag);
+  if (params.category) query.set("category", params.category);
+  if (params.lang) query.set("lang", params.lang);
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  const res = await fetch(`${getBaseUrl()}/api/blogs?${query.toString()}`, { cache: "no-store" });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy danh sách blog thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { items: ApiBlog[]; page: number; limit: number; total: number };
+}
+
+export async function apiGetBlogBySlug(slug: string): Promise<ApiBlog>{
+  const res = await fetch(`${getBaseUrl()}/api/blogs/${encodeURIComponent(slug)}`, { cache: "no-store" });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy bài viết thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as ApiBlog;
+}
+
+// Blogs - Admin
+export async function apiAdminListBlogs(token: string, params: { q?: string; tag?: string; category?: string; lang?: string; page?: number; limit?: number } = {}): Promise<{ items: ApiBlog[]; page: number; limit: number; total: number }>{
+  const query = new URLSearchParams();
+  if (params.q) query.set("q", params.q);
+  if (params.tag) query.set("tag", params.tag);
+  if (params.category) query.set("category", params.category);
+  if (params.lang) query.set("lang", params.lang);
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  const res = await fetch(`${getBaseUrl()}/api/admin/blogs?${query.toString()}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy danh sách blog (admin) thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { items: ApiBlog[]; page: number; limit: number; total: number };
+}
+
+export async function apiAdminCreateBlog(token: string, payload: Partial<ApiBlog>): Promise<ApiBlog>{
+  const res = await fetch(`${getBaseUrl()}/api/admin/blogs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Tạo bài viết thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as ApiBlog;
+}
+
+export async function apiAdminUpdateBlog(token: string, id: string, payload: Partial<ApiBlog>): Promise<ApiBlog>{
+  const res = await fetch(`${getBaseUrl()}/api/admin/blogs/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Cập nhật bài viết thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as ApiBlog;
+}
+
+export async function apiAdminDeleteBlog(token: string, id: string): Promise<{ success: boolean }>{
+  const res = await fetch(`${getBaseUrl()}/api/admin/blogs/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Xóa bài viết thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { success: boolean };
+}
+
 // Admin APIs
 export interface AdminStats {
   overview: {

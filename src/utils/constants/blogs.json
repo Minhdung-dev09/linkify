@@ -1,38 +1,127 @@
 [
-    {
-        "title": "How to Maximize Your Productivity with Link Management Tools",
-        "image": "/assets/blog1.jpg",
-        "author_image": "https://example.com/images/author1.jpg",
-        "author_name": "John Doe",
-        "date_published": "2024-10-05",
-        "description": "Learn how to maximize your productivity with link management tools.",
-        "slug": "how-to-maximize-your-productivity-with-link-management-tools"
+  {
+    "id": "b1b9b7e8-4a0f-4a0c-9a2e-1a5f0f1a0001",
+    "slug": "how-to-maximize-your-productivity-with-link-management-tools",
+    "title": "How to Maximize Your Productivity with Link Management Tools",
+    "description": "Learn how to maximize your productivity with link management tools.",
+    "image": "/assets/blog1.jpg",
+    "cover_image_credit": { "text": "Unsplash – A. Photographer", "url": "https://unsplash.com" },
+    "date_published": "2024-10-05",
+    "updated_at": "2024-10-06",
+    "published": true,
+    "read_time_minutes": 7,
+    "tags": ["productivity", "best-practices", "link-management"],
+    "category": "Guides",
+    "lang": "en",
+    "author": {
+      "name": "John Doe",
+      "image": "https://example.com/images/author1.jpg",
+      "bio": "Product manager focused on growth tooling and content operations.",
+      "socials": {
+        "twitter": "https://x.com/johndoe",
+        "linkedin": "https://www.linkedin.com/in/johndoe/",
+        "website": "https://johndoe.dev"
+      }
     },
-    {
-        "title": "The Ultimate Guide to Organizing Links for Teams",
-        "image": "/assets/blog2.jpg",
-        "author_image": "https://example.com/images/author2.jpg",
-        "author_name": "Jane Smith",
-        "date_published": "2024-09-28",
-        "description": "How to organize links for teams.",
-        "slug": "the-ultimate-guide-to-organizing-links-for-teams"
+    "seo": {
+      "title": "Boost Productivity with Link Management Tools",
+      "description": "Work faster with a structured link workflow across teams.",
+      "og_image": "/assets/blog1.jpg",
+      "canonical_url": "https://yourdomain.com/resources/blog/how-to-maximize-your-productivity-with-link-management-tools"
     },
-    {
-        "title": "Why Link Management is Essential for Digital Marketers",
-        "image": "/assets/blog3.jpg",
-        "author_image": "https://example.com/images/author3.jpg",
-        "author_name": "Chris Martin",
-        "date_published": "2024-09-20",
-        "description": "Link management is essential for digital marketers.",
-        "slug": "why-link-management-is-essential-for-digital-marketers"
+    "content_markdown": "# Maximize Productivity with Link Management\n\nManaging links efficiently saves hours each week. In this guide, you'll learn:\n\n- How to create a simple taxonomy for links\n- Ways to automate routine tasks\n- Dashboards that surface the right links at the right time\n\n## 1. Create a taxonomy\nUse tags like `campaign`, `channel`, `persona` to make links discoverable.\n\n## 2. Automate routine tasks\nAuto-tag links based on source and add UTM consistently.\n\n## 3. Build the right dashboards\nUse charts to see performance by channel, device, and geo.\n\n> Tip: Start small. Standardize a few tags first, then evolve."
+  },
+  {
+    "id": "b1b9b7e8-4a0f-4a0c-9a2e-1a5f0f1a0002",
+    "slug": "the-ultimate-guide-to-organizing-links-for-teams",
+    "title": "The Ultimate Guide to Organizing Links for Teams",
+    "description": "How to organize links for teams.",
+    "image": "/assets/blog2.jpg",
+    "cover_image_credit": { "text": "Unsplash – B. Creator", "url": "https://unsplash.com" },
+    "date_published": "2024-09-28",
+    "updated_at": "2024-10-01",
+    "published": true,
+    "read_time_minutes": 10,
+    "tags": ["teams", "organization", "process"],
+    "category": "Playbooks",
+    "lang": "en",
+    "author": {
+      "name": "Jane Smith",
+      "image": "https://example.com/images/author2.jpg",
+      "bio": "Operations lead building scalable content systems for global teams.",
+      "socials": {
+        "twitter": "https://x.com/janesmith",
+        "linkedin": "https://www.linkedin.com/in/janesmith/"
+      }
     },
-    {
-        "title": "Top 5 Features Every Link Management Software Should Have",
-        "image": "/assets/blog4.jpg",
-        "author_image": "https://example.com/images/author4.jpg",
-        "author_name": "Emily Clark",
-        "date_published": "2024-09-15",
-        "description": "The features that every link management software should have.",
-        "slug": "top-5-features-every-link-management-software-should-have"
-    }
+    "seo": {
+      "title": "Team Link Organization – A Practical Playbook",
+      "description": "Spaces, permissions, and naming that scale with your org.",
+      "og_image": "/assets/blog2.jpg",
+      "canonical_url": "https://yourdomain.com/resources/blog/the-ultimate-guide-to-organizing-links-for-teams"
+    },
+    "content_markdown": "# Organizing Links for Teams\n\nWhen teams grow, link chaos grows faster. Here's how to stay ahead.\n\n## Spaces and permissions\nKeep sensitive links isolated with role-based access.\n\n## Naming conventions\nAdopt `<team>-<topic>-<purpose>` to stay consistent.\n\n## Reviews\nRun a monthly cleanup to archive stale links."
+  },
+  {
+    "id": "b1b9b7e8-4a0f-4a0c-9a2e-1a5f0f1a0003",
+    "slug": "why-link-management-is-essential-for-digital-marketers",
+    "title": "Why Link Management is Essential for Digital Marketers",
+    "description": "Link management is essential for digital marketers.",
+    "image": "/assets/blog3.jpg",
+    "cover_image_credit": { "text": "Unsplash – C. Artist", "url": "https://unsplash.com" },
+    "date_published": "2024-09-20",
+    "updated_at": "2024-09-22",
+    "published": true,
+    "read_time_minutes": 8,
+    "tags": ["marketing", "analytics", "utm"],
+    "category": "Opinions",
+    "lang": "en",
+    "author": {
+      "name": "Chris Martin",
+      "image": "https://example.com/images/author3.jpg",
+      "bio": "Growth marketer exploring measurement and creative experimentation.",
+      "socials": {
+        "twitter": "https://x.com/chrismartin",
+        "linkedin": "https://www.linkedin.com/in/chrismartin/"
+      }
+    },
+    "seo": {
+      "title": "Why Marketers Need Link Management",
+      "description": "Consistency, attribution, and insight at scale.",
+      "og_image": "/assets/blog3.jpg",
+      "canonical_url": "https://yourdomain.com/resources/blog/why-link-management-is-essential-for-digital-marketers"
+    },
+    "content_markdown": "# Why Link Management Matters\n\nMarketing lives and dies by attribution. Without link hygiene, analytics lie.\n\n- Consistent UTMs lead to clean dashboards\n- Bulk updates prevent decay\n- Shared libraries reduce duplication"
+  },
+  {
+    "id": "b1b9b7e8-4a0f-4a0c-9a2e-1a5f0f1a0004",
+    "slug": "top-5-features-every-link-management-software-should-have",
+    "title": "Top 5 Features Every Link Management Software Should Have",
+    "description": "The features that every link management software should have.",
+    "image": "/assets/blog4.jpg",
+    "cover_image_credit": { "text": "Unsplash – D. Creator", "url": "https://unsplash.com" },
+    "date_published": "2024-09-15",
+    "updated_at": "2024-09-18",
+    "published": true,
+    "read_time_minutes": 6,
+    "tags": ["features", "product", "checklist"],
+    "category": "Checklists",
+    "lang": "en",
+    "author": {
+      "name": "Emily Clark",
+      "image": "https://example.com/images/author4.jpg",
+      "bio": "Writer covering Martech products and buyer guides.",
+      "socials": {
+        "twitter": "https://x.com/emilywrites",
+        "linkedin": "https://www.linkedin.com/in/emilyclark/"
+      }
+    },
+    "seo": {
+      "title": "Link Management Software: 5 Must‑Have Features",
+      "description": "QR, UTMs, analytics, permissions, and developer APIs.",
+      "og_image": "/assets/blog4.jpg",
+      "canonical_url": "https://yourdomain.com/resources/blog/top-5-features-every-link-management-software-should-have"
+    },
+    "content_markdown": "# 5 Features to Look For\n\n1. Custom domains\n2. Bulk editing\n3. UTM templates\n4. QR codes\n5. API access"
+  }
 ]
