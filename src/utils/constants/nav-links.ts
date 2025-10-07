@@ -38,6 +38,12 @@ export const NAV_LINKS = [
         tagline: "Tạo landing page chuyên nghiệp với drag & drop",
     },
     {
+        title: "Blog",
+        href: "/resources/blog",
+        icon: NewspaperIcon,
+        tagline: "Tin tức, hướng dẫn, cập nhật",
+    },
+    {
         title: "Bảng giá",
         href: "/pricing",
         isModal: true, // Flag để trigger modal thay vì navigate
