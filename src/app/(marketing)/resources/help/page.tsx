@@ -1,4 +1,8 @@
 import { AnimationContainer } from "@/components";
+export const metadata = {
+  title: "Help & Support | ccmelinktracker",
+  description: "Find help, guides, and support for ccmelinktracker.",
+};
 import React from 'react'
 
 const HelpPage = () => {

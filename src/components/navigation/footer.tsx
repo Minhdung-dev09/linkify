@@ -143,7 +143,7 @@ const Footer = () => {
             </div>
 
             <div className="h-[20rem] lg:h-[20rem] hidden md:flex items-center justify-center">
-                <TextHoverEffect text="CCME ccme-shortlink" />
+                <TextHoverEffect text="CCME ccmelinktracker" />
             </div>
         </footer>
     )

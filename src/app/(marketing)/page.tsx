@@ -39,7 +39,7 @@ const HomePage = async () => {
                             </span>
                         </h1>
                         <p className="mb-12 text-lg tracking-tight text-muted-foreground md:text-xl text-balance">
-                            Tối ưu việc quản lý liên kết của bạn với ccme-shortlink.
+                            Tối ưu việc quản lý liên kết của bạn với ccmelinktracker.
                             <br className="hidden md:block" />
                             <span className="hidden md:block">Rút gọn, theo dõi và tổ chức tất cả liên kết ở một nơi.</span>
                         </p>
@@ -114,7 +114,7 @@ const HomePage = async () => {
                             Quản lý liên kết như một chuyên gia
                         </h2>
                         <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-                            ccme-shortlink là công cụ quản lý liên kết mạnh mẽ giúp bạn rút gọn, theo dõi và tổ chức tất cả liên kết ở một nơi.
+                            ccmelinktracker là công cụ quản lý liên kết mạnh mẽ giúp bạn rút gọn, theo dõi và tổ chức tất cả liên kết ở một nơi.
                         </p>
                     </div>
                 </AnimationContainer>
@@ -174,7 +174,7 @@ const HomePage = async () => {
                               Choose a plan that works for you
                           </h2>
                           <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-                              Get started with ccme-shortlink today and enjoy more features with our pro plans.
+                              Get started with ccmelinktracker today and enjoy more features with our pro plans.
                           </p>
                       </div>
                   </AnimationContainer>
@@ -203,7 +203,7 @@ const HomePage = async () => {
                             Người dùng nói gì về chúng tôi
                         </h2>
                         <p className="mt-4 text-center lg:text-center text-lg text-muted-foreground max-w-lg">
-                            Cảm nhận thực tế từ người dùng về ccme-shortlink.
+                            Cảm nhận thực tế từ người dùng về ccmelinktracker.
                         </p>
                     </div>
                 </AnimationContainer>

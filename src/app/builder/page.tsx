@@ -192,10 +192,7 @@ export default function BuilderPage() {
     ? currentPage.elements.find(el => el.id === selectedElement) || null
     : null;
 
-  // Debug: Log selected element info
-  console.log('Selected Element ID:', selectedElement);
-  console.log('Selected Element Data:', selectedElementData);
-  console.log('Current Page Elements:', currentPage.elements.length);
+  // Debug removed
 
   if (previewMode) {
     return (
@@ -410,9 +407,6 @@ export default function BuilderPage() {
         onSave={async (data) => {
           try {
             const headers = getAuthHeaders();
-            console.log('Auth headers:', headers);
-            console.log('Token from localStorage:', localStorage.getItem('token'));
-            console.log('Token from auth_token:', localStorage.getItem('auth_token'));
             
             // Optionally capture thumbnail via html2canvas if available
             let thumbnail: string | undefined;
@@ -435,10 +429,8 @@ export default function BuilderPage() {
               throw new Error(error.message || 'Failed to save landing page');
             }
 
-            const result = await response.json();
-            console.log('Landing page saved:', result);
+            await response.json();
           } catch (error) {
-            console.error('Error saving landing page:', error);
             throw error;
           }
         }}

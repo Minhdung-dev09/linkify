@@ -1,4 +1,8 @@
 import { AnimationContainer, MaxWidthWrapper, PricingCards } from "@/components";
+export const metadata = {
+    title: "Pricing | ccmelinktracker",
+    description: "Simple and transparent pricing for ccmelinktracker. Choose the plan that fits you.",
+};
 import {
     Accordion,
     AccordionContent,
