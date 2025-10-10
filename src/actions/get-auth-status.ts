@@ -18,7 +18,6 @@ const getAuthStatus = async () => {
         },
     });
 
-    console.log("existingUser", existingUser);
 
     if (!existingUser) {
         await db.user.create({

@@ -46,7 +46,7 @@ export const NAV_LINKS = [
     {
         title: "Bảng giá",
         href: "/pricing",
-        isModal: true, // Flag để trigger modal thay vì navigate
+        // isModal removed to allow navigation to the pricing page
     },
     // {
     //     title: "Thư ngỏ",

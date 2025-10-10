@@ -5,20 +5,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const authHeader = request.headers.get('Authorization');
-    
-    console.log('Landing page API - Auth header:', authHeader);
-    console.log('Landing page API - Body:', JSON.stringify(body, null, 2));
+  const authHeader = request.headers.get('Authorization');
     
     if (!authHeader) {
-      console.log('Landing page API - No auth header');
       return NextResponse.json(
         { message: 'Authentication required' },
         { status: 401 }
       );
     }
-    
-    console.log('Landing page API - Forwarding to backend:', `${API_BASE_URL}/api/landing-pages`);
     
     const response = await fetch(`${API_BASE_URL}/api/landing-pages`, {
       method: 'POST',
@@ -29,12 +23,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    console.log('Landing page API - Backend response status:', response.status);
-    console.log('Landing page API - Backend response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const error = await response.json();
-      console.log('Landing page API - Backend error:', error);
       return NextResponse.json(error, { status: response.status });
     }
 

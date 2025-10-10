@@ -16,11 +16,30 @@ export function middleware(request: NextRequest) {
     // vì cần decode JWT và kiểm tra isAdmin
   }
 
+  // Chặn truy cập trang auth nếu đã đăng nhập
+  if (pathname.startsWith('/auth')) {
+    const token = request.cookies.get('token')?.value
+    if (token) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
+  // Bảo vệ billing: yêu cầu đăng nhập
+  if (pathname.startsWith('/dashboard/billing')) {
+    const token = request.cookies.get('token')?.value
+    if (!token) {
+      return NextResponse.redirect(new URL('/auth/sign-in', request.url))
+    }
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
     '/admin/:path*',
+    '/auth/:path*',
+    '/dashboard/billing',
+    '/dashboard/billing/:path*',
   ]
 }

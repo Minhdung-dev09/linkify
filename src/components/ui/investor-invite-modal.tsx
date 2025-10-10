@@ -53,7 +53,7 @@ const InvestorInviteModal = ({ open, onOpenChange }: InvestorInviteModalProps) =
                 <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500" style={{ fontFamily: 'cursive' }}>THƯ NGỎ HỢP TÁC ĐẦU TƯ</h2>
                 <p className="text-xs sm:text-sm text-muted-foreground mb-6">Các bạn thân mến</p>
                 <div className="prose prose-invert prose-p:leading-relaxed prose-p:text-justify prose-h3:mt-6 text-neutral-200 prose-strong:text-neutral-100" style={{ fontFamily: 'cursive' }}>
-                <p>Chúng tớ là CCME Company – đội ngũ đang xây dựng ccme-shortlink, một nền tảng giúp bạn quản lý, theo dõi traffic và tối ưu hiệu quả công việc xoay quanh sử dụng các liên kết để tiếp thị.</p>
+                <p>Chúng tớ là CCME Company – đội ngũ đang xây dựng ccmelinktracker, một nền tảng giúp bạn quản lý, theo dõi traffic và tối ưu hiệu quả công việc xoay quanh sử dụng các liên kết để tiếp thị.</p>
                 <p>Sản phẩm đã có bản thử nghiệm (Beta) ổn định và đang bước vào giai đoạn hoàn thiện để vận hành chính thức. Chúng tớ tìm kiếm những nhà đầu tư đồng hành – không chỉ về tài chính mà còn là đối tác chiến lược, cùng chia sẻ tầm nhìn dài hạn để đưa sản phẩm đến với nhiều người dùng hơn.</p>
                 <h3 className="text-xl text-red-300 font-semibold">Lợi ích khi đầu tư giai đoạn sớm</h3>
                 <ul className="list-disc pl-5 space-y-2">

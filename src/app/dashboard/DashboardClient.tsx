@@ -460,7 +460,7 @@ export default function DashboardClient() {
         </Card>
       </div>
 
-      <ShareModal open={!!shareUrl} onOpenChange={(o)=>!o && setShareUrl(null)} url={shareUrl} title="Chia sẻ liên kết" text="Xem link này trên ccme-shortlink" />
+      <ShareModal open={!!shareUrl} onOpenChange={(o)=>!o && setShareUrl(null)} url={shareUrl} title="Chia sẻ liên kết" text="Xem link này trên ccmelinktracker" />
 
       <Dialog open={!!qrSlug} onOpenChange={(open) => !open && setQrSlug(null)}>
         <DialogContent>

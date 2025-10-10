@@ -8,9 +8,28 @@ import { cn, PLANS } from "@/utils";
 import { motion } from "framer-motion";
 import { CheckCircleIcon } from "lucide-react";
 import Link from "next/link";
+import { getToken } from "@/lib/auth";
+import { useMemo } from 'react';
 import { useState } from 'react';
 
 type Tab = "monthly" | "yearly";
+
+const SmartPricingCta = ({ planName, defaultHref, btnClass, children }: { planName: string; defaultHref: string; btnClass: string; children: React.ReactNode }) => {
+    const isLoggedIn = typeof window !== 'undefined' && !!getToken();
+    const href = useMemo(() => {
+        if (isLoggedIn) {
+            const plan = encodeURIComponent(planName.toLowerCase());
+            return `/dashboard/billing?plan=${plan}`;
+        }
+        return defaultHref;
+    }, [isLoggedIn, planName, defaultHref]);
+
+    return (
+        <Link href={href} style={{ width: "100%" }} className={btnClass}>
+            {children}
+        </Link>
+    );
+};
 
 const PricingCards = () => {
 
@@ -179,13 +198,9 @@ const PricingCards = () => {
                             ))}
                         </CardContent>
                         <CardFooter className="w-full pt- mt-auto">
-                            <Link
-                                href={plan.btn.href}
-                                style={{ width: "100%" }}
-                                className={buttonVariants({ className: plan.name === "Pro" && "bg-purple-500 hover:bg-purple-500/80 text-white" })}
-                            >
+                            <SmartPricingCta planName={plan.name} defaultHref={plan.btn.href} btnClass={buttonVariants({ className: plan.name === "Pro" && "bg-purple-500 hover:bg-purple-500/80 text-white" })}>
                                 {plan.btn.text}
-                            </Link>
+                            </SmartPricingCta>
                         </CardFooter>
                     </Card>
                 ))}

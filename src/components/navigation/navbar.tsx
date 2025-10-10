@@ -147,7 +147,7 @@ const Navbar = () => {
                     <div className="flex items-center space-x-12">
                         <Link href="/#home">
                             <span className="text-lg font-bold font-heading !leading-none">
-                                ccme-shortlink
+                                ccmelinktracker
                             </span>
                         </Link>
 
@@ -195,27 +195,11 @@ const Navbar = () => {
                                                 </NavigationMenuContent>
                                             </>
                                         ) : (
-                                            link.isModal ? (
-                                                <button
-                                                    onClick={() => setInvestorOpen(true)}
-                                                    className={navigationMenuTriggerStyle()}
-                                                >
+                                            <Link href={link.href} legacyBehavior passHref>
+                                                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                                                     {link.title}
-                                                </button>
-                                            ) : link.isModal ? (
-                                                <button
-                                                    onClick={() => setPricingModalOpen(true)}
-                                                    className={navigationMenuTriggerStyle()}
-                                                >
-                                                    {link.title}
-                                                </button>
-                                            ) : (
-                                                <Link href={link.href} legacyBehavior passHref>
-                                                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                                        {link.title}
-                                                    </NavigationMenuLink>
-                                                </Link>
-                                            )
+                                                </NavigationMenuLink>
+                                            </Link>
                                         )}
                                     </NavigationMenuItem>
                                 ))}
