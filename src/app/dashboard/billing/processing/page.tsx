@@ -50,7 +50,7 @@ export default function BillingProcessingPage() {
 
               <div className="flex items-center gap-3 pt-2">
                 <Button onClick={() => router.push(`/dashboard`)}>Về dashboard</Button>
-                <Button variant="secondary" onClick={() => router.push(`/dashboard/billing?plan=${plan}&cycle=${cycle}`)}>Chọn lại phương thức</Button>
+                <Button variant="outline" onClick={() => router.push(`/dashboard/billing?plan=${plan}&cycle=${cycle}`)}>Chọn lại phương thức</Button>
               </div>
             </CardContent>
           </Card>
