@@ -4,9 +4,9 @@ import { AnimationContainer, MaxWidthWrapper } from "@/components";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 
-export default function BillingProcessingPage() {
+function BillingProcessingPageInner() {
   const params = useSearchParams();
   const router = useRouter();
 
@@ -57,6 +57,14 @@ export default function BillingProcessingPage() {
         </div>
       </AnimationContainer>
     </MaxWidthWrapper>
+  );
+}
+
+export default function BillingProcessingPage() {
+  return (
+    <Suspense fallback={null}>
+      <BillingProcessingPageInner />
+    </Suspense>
   );
 }
 

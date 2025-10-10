@@ -32,6 +32,11 @@ export const generateMetadata = ({
     title,
     description,
     icons,
+    metadataBase: new URL(
+        (process.env.NEXT_PUBLIC_SITE_URL as string) ||
+        `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}` ||
+        "http://localhost:3000"
+    ),
     openGraph: {
         title,
         description,
@@ -43,6 +48,5 @@ export const generateMetadata = ({
         ...(image && { card: "summary_large_image", images: [image] }),
         creator: "@shreyassihasane",
     },
-    // metadataBase: new URL(process.env.APP_DOMAIN!),
     ...(noIndex && { robots: { index: false, follow: false } }),
 });
