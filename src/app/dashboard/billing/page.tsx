@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getToken } from "@/lib/auth";
 import { PLANS } from "@/utils";
@@ -19,7 +19,7 @@ const PAYMENT_METHODS = [
 
 type PaymentMethod = typeof PAYMENT_METHODS[number]["key"];
 
-export default function BillingPage() {
+function BillingPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<string>("Pro");
@@ -146,6 +146,14 @@ export default function BillingPage() {
         </div>
       </AnimationContainer>
     </MaxWidthWrapper>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense fallback={null}>
+      <BillingPageInner />
+    </Suspense>
   );
 }
 
