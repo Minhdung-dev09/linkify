@@ -108,3 +108,30 @@ html, body {
 .not-found {
   box-shadow: rgba(150, 18, 226, 0.3) 5px 5px;
 }
+
+/* Conveyor Belt Animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 15s linear infinite;
+}
+
+.animate-scroll-reverse {
+  animation: scroll-reverse 15s linear infinite;
+}

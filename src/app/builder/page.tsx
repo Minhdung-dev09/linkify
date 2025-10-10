@@ -83,6 +83,7 @@ export default function BuilderPage() {
   const [historyIndex, setHistoryIndex] = useState(0);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showSmartGuides, setShowSmartGuides] = useState(true);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -352,6 +353,15 @@ export default function BuilderPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setShowSmartGuides(!showSmartGuides)}
+                  className={showSmartGuides ? "bg-green-50 text-green-600 border-green-200" : ""}
+                >
+                  <Layers className="h-4 w-4 mr-2" />
+                  {showSmartGuides ? "Hide Smart" : "Show Smart"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     const newPage = { ...currentPage, elements: [] };
                     saveToHistory(newPage);
@@ -373,6 +383,7 @@ export default function BuilderPage() {
               onDeleteElement={deleteElement}
               onDuplicateElement={duplicateElement}
               deviceMode={deviceMode}
+              showSmartGuides={showSmartGuides}
             />
           </div>
         </div>
