@@ -1,7 +1,7 @@
 import { AnimationContainer, MaxWidthWrapper, PricingCards } from "@/components";
 export const metadata = {
-    title: "Pricing | ccmelinktracker",
-    description: "Simple and transparent pricing for ccmelinktracker. Choose the plan that fits you.",
+    title: "Bảng giá | ccmelinktracker",
+    description: "Bảng giá đơn giản và minh bạch cho ccmelinktracker. Chọn gói phù hợp với bạn.",
 };
 import {
     Accordion,
@@ -17,13 +17,10 @@ const PricingPage = () => {
         <MaxWidthWrapper className="mb-40">
             <AnimationContainer delay={0.1}>
                 <div className="flex flex-col items-center justify-center py-10 max-w-lg mx-auto">
-                    <MagicBadge title="Pricing" />
+                    <MagicBadge title="Bảng giá" />
                     <h1 className="text-2xl md:text-4xl lg:text-5xl font-semibold font-heading text-center mt-6 !leading-tight">
-                        Simple and transparent pricing
+                        Bảng giá CcmeLinkTracker
                     </h1>
-                    <p className="text-base md:text-lg mt-6 text-center text-muted-foreground">
-                        Choose a plan that works for you. No hidden fees. No surprises.
-                    </p>
                 </div>
             </AnimationContainer>
 
@@ -35,10 +32,10 @@ const PricingPage = () => {
                 <div className="mt-20 w-full">
                     <div className="flex flex-col items-center justify-center w-full pt-12">
                         <h2 className="mt-6 text-2xl font-semibold text-center lg:text-3xl xl:text-4xl">
-                            Frequently Asked Questions
+                            Câu hỏi thường gặp
                         </h2>
                         <p className="max-w-lg mt-6 text-center text-neutral-500">
-                            Here are some of the most common questions we get asked. If you have a question that isn&apos;t answered here, feel free to reach out to us.
+                            Đây là một số câu hỏi phổ biến nhất mà chúng tôi nhận được. Nếu bạn có câu hỏi không được trả lời ở đây, hãy liên hệ với chúng tôi.
                         </p>
                     </div>
                     <div className="max-w-3xl mx-auto w-full mt-20">

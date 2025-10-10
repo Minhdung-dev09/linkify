@@ -32,6 +32,7 @@ interface BuilderCanvasProps {
   onDeleteElement: (elementId: string) => void;
   onDuplicateElement: (elementId: string) => void;
   deviceMode: 'desktop' | 'tablet' | 'mobile';
+  showSmartGuides?: boolean;
 }
 
  
@@ -43,7 +44,8 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   onUpdateElement,
   onDeleteElement,
   onDuplicateElement,
-  deviceMode
+  deviceMode,
+  showSmartGuides = true
 }, ref) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -56,6 +58,12 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
   const [showFontSizePicker, setShowFontSizePicker] = useState<string | null>(null);
   const [showLinkInput, setShowLinkInput] = useState<string | null>(null);
+  const [smartGuides, setSmartGuides] = useState<{
+    vertical: number[];
+    horizontal: number[];
+    alignments: { type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'; elementId: string; position: number }[];
+    distances: { type: 'horizontal' | 'vertical'; distance: number; x: number; y: number; element1Id: string; element2Id: string }[];
+  } | null>(null);
   const canvasScrollRef = useRef<HTMLDivElement>(null);
   const rafIdRef = useRef<number | null>(null);
   const pendingMoveRef = useRef<null | { type: 'drag' | 'resize'; elementId: string; deltaX: number; deltaY: number; handle?: string }>(null);
@@ -133,11 +141,45 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
           if (!element) return;
 
           if (payload.type === 'drag') {
-            onUpdateElement(payload.elementId, {
-              position: {
-                x: Math.max(0, element.position.x + payload.deltaX),
-                y: Math.max(0, element.position.y + payload.deltaY)
+            const newX = Math.max(0, element.position.x + payload.deltaX);
+            const newY = Math.max(0, element.position.y + payload.deltaY);
+            
+            let finalX = newX;
+            let finalY = newY;
+            
+            if (showSmartGuides) {
+              // Create temporary element with new position for smart guides calculation
+              const tempElement = { ...element, position: { x: newX, y: newY } };
+              const guides = calculateSmartGuides(tempElement, page.elements);
+              
+              // Snap to vertical guides
+              if (guides.vertical.length > 0) {
+                const closestVertical = guides.vertical.reduce((prev, curr) => 
+                  Math.abs(curr - newX) < Math.abs(prev - newX) ? curr : prev
+                );
+                if (Math.abs(closestVertical - newX) < 10) {
+                  finalX = closestVertical;
+                }
               }
+              
+              // Snap to horizontal guides
+              if (guides.horizontal.length > 0) {
+                const closestHorizontal = guides.horizontal.reduce((prev, curr) => 
+                  Math.abs(curr - newY) < Math.abs(prev - newY) ? curr : prev
+                );
+                if (Math.abs(closestHorizontal - newY) < 10) {
+                  finalY = closestHorizontal;
+                }
+              }
+              
+              // Update smart guides state
+              setSmartGuides(guides.vertical.length > 0 || guides.horizontal.length > 0 ? guides : null);
+            } else {
+              setSmartGuides(null);
+            }
+            
+            onUpdateElement(payload.elementId, {
+              position: { x: finalX, y: finalY }
             });
           } else if (payload.type === 'resize' && payload.handle) {
             const newSize = { ...element.size } as { width: number; height: number };
@@ -192,6 +234,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
       setIsResizing(false);
       setDragElement(null);
       setResizeHandle(null);
+      setSmartGuides(null); // Clear smart guides when drag ends
     };
 
     if (isDragging || isResizing) {
@@ -220,6 +263,134 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   };
 
   const deviceDimensions = getDeviceDimensions();
+
+  // Smart Guides calculation
+  const calculateSmartGuides = useCallback((draggedElement: BuilderElement, allElements: BuilderElement[]) => {
+    const threshold = 5; // Snap distance in pixels
+    const distanceThreshold = 200; // Show distance measurements within this range
+    const verticalGuides: number[] = [];
+    const horizontalGuides: number[] = [];
+    const alignments: { type: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'; elementId: string; position: number }[] = [];
+    const distances: { type: 'horizontal' | 'vertical'; distance: number; x: number; y: number; element1Id: string; element2Id: string }[] = [];
+
+    const draggedLeft = draggedElement.position.x;
+    const draggedRight = draggedElement.position.x + draggedElement.size.width;
+    const draggedCenter = draggedElement.position.x + draggedElement.size.width / 2;
+    const draggedTop = draggedElement.position.y;
+    const draggedBottom = draggedElement.position.y + draggedElement.size.height;
+    const draggedMiddle = draggedElement.position.y + draggedElement.size.height / 2;
+
+    allElements.forEach(element => {
+      if (element.id === draggedElement.id) return;
+
+      const elementLeft = element.position.x;
+      const elementRight = element.position.x + element.size.width;
+      const elementCenter = element.position.x + element.size.width / 2;
+      const elementTop = element.position.y;
+      const elementBottom = element.position.y + element.size.height;
+      const elementMiddle = element.position.y + element.size.height / 2;
+
+      // Vertical alignments
+      if (Math.abs(draggedLeft - elementLeft) < threshold) {
+        verticalGuides.push(elementLeft);
+        alignments.push({ type: 'left', elementId: element.id, position: elementLeft });
+      }
+      if (Math.abs(draggedRight - elementRight) < threshold) {
+        verticalGuides.push(elementRight);
+        alignments.push({ type: 'right', elementId: element.id, position: elementRight });
+      }
+      if (Math.abs(draggedCenter - elementCenter) < threshold) {
+        verticalGuides.push(elementCenter);
+        alignments.push({ type: 'center', elementId: element.id, position: elementCenter });
+      }
+      if (Math.abs(draggedLeft - elementRight) < threshold) {
+        verticalGuides.push(elementRight);
+      }
+      if (Math.abs(draggedRight - elementLeft) < threshold) {
+        verticalGuides.push(elementLeft);
+      }
+
+      // Horizontal alignments
+      if (Math.abs(draggedTop - elementTop) < threshold) {
+        horizontalGuides.push(elementTop);
+        alignments.push({ type: 'top', elementId: element.id, position: elementTop });
+      }
+      if (Math.abs(draggedBottom - elementBottom) < threshold) {
+        horizontalGuides.push(elementBottom);
+        alignments.push({ type: 'bottom', elementId: element.id, position: elementBottom });
+      }
+      if (Math.abs(draggedMiddle - elementMiddle) < threshold) {
+        horizontalGuides.push(elementMiddle);
+        alignments.push({ type: 'middle', elementId: element.id, position: elementMiddle });
+      }
+      if (Math.abs(draggedTop - elementBottom) < threshold) {
+        horizontalGuides.push(elementBottom);
+      }
+      if (Math.abs(draggedBottom - elementTop) < threshold) {
+        horizontalGuides.push(elementTop);
+      }
+
+      // Distance measurements
+      // Horizontal distances (left to right, right to left)
+      const horizontalDistance1 = Math.abs(draggedRight - elementLeft);
+      const horizontalDistance2 = Math.abs(draggedLeft - elementRight);
+      
+      if (horizontalDistance1 < distanceThreshold && horizontalDistance1 > 10) {
+        distances.push({
+          type: 'horizontal',
+          distance: Math.round(horizontalDistance1),
+          x: (draggedRight + elementLeft) / 2,
+          y: Math.min(draggedTop, elementTop) + Math.abs(draggedTop - elementTop) / 2,
+          element1Id: draggedElement.id,
+          element2Id: element.id
+        });
+      }
+      
+      if (horizontalDistance2 < distanceThreshold && horizontalDistance2 > 10) {
+        distances.push({
+          type: 'horizontal',
+          distance: Math.round(horizontalDistance2),
+          x: (draggedLeft + elementRight) / 2,
+          y: Math.min(draggedTop, elementTop) + Math.abs(draggedTop - elementTop) / 2,
+          element1Id: draggedElement.id,
+          element2Id: element.id
+        });
+      }
+
+      // Vertical distances (top to bottom, bottom to top)
+      const verticalDistance1 = Math.abs(draggedBottom - elementTop);
+      const verticalDistance2 = Math.abs(draggedTop - elementBottom);
+      
+      if (verticalDistance1 < distanceThreshold && verticalDistance1 > 10) {
+        distances.push({
+          type: 'vertical',
+          distance: Math.round(verticalDistance1),
+          x: Math.min(draggedLeft, elementLeft) + Math.abs(draggedLeft - elementLeft) / 2,
+          y: (draggedBottom + elementTop) / 2,
+          element1Id: draggedElement.id,
+          element2Id: element.id
+        });
+      }
+      
+      if (verticalDistance2 < distanceThreshold && verticalDistance2 > 10) {
+        distances.push({
+          type: 'vertical',
+          distance: Math.round(verticalDistance2),
+          x: Math.min(draggedLeft, elementLeft) + Math.abs(draggedLeft - elementLeft) / 2,
+          y: (draggedTop + elementBottom) / 2,
+          element1Id: draggedElement.id,
+          element2Id: element.id
+        });
+      }
+    });
+
+    return {
+      vertical: Array.from(new Set(verticalGuides)),
+      horizontal: Array.from(new Set(horizontalGuides)),
+      alignments,
+      distances
+    };
+  }, []);
 
   const handleElementClick = useCallback((e: React.MouseEvent, elementId: string) => {
     e.stopPropagation();
@@ -1650,34 +1821,23 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
   return (
     <div
       ref={ref}
-      className="relative w-full h-full flex items-center justify-center p-8"
+      className="relative w-full h-full"
       onClick={handleCanvasClick}
     >
-      {/* Device Frame */}
+      {/* Full Width Canvas */}
       <div 
-        className="relative bg-white shadow-2xl rounded-lg overflow-hidden"
+        className="relative bg-white shadow-2xl rounded-lg overflow-hidden w-full"
         style={{
-          width: deviceDimensions.width,
-          height: deviceDimensions.height,
-          maxWidth: '100%',
-          maxHeight: '100%'
+          minHeight: '100vh',
+          maxWidth: '100%'
         }}
       >
-        {/* Device Header */}
-        <div className="h-8 bg-gray-100 flex items-center justify-center border-b">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          </div>
-        </div>
-
         {/* Canvas Content */}
         <div 
           ref={canvasScrollRef}
           className="relative w-full overflow-y-auto overflow-x-hidden scroll-smooth"
           style={{
-            height: deviceDimensions.height - 32,
+            minHeight: '100vh',
             backgroundColor: page.settings.backgroundColor,
             padding: page.settings.padding,
             scrollBehavior: 'smooth'
@@ -1696,6 +1856,72 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                 backgroundSize: '20px 20px'
               }}
             />
+
+            {/* Smart Guides */}
+            {smartGuides && (
+              <div className="absolute inset-0 pointer-events-none z-50">
+                {/* Vertical Guides */}
+                {smartGuides.vertical.map((x, index) => (
+                  <div
+                    key={`vertical-${index}`}
+                    className="absolute top-0 bottom-0 w-px bg-blue-500 opacity-80"
+                    style={{ left: x }}
+                  />
+                ))}
+                
+                {/* Horizontal Guides */}
+                {smartGuides.horizontal.map((y, index) => (
+                  <div
+                    key={`horizontal-${index}`}
+                    className="absolute left-0 right-0 h-px bg-blue-500 opacity-80"
+                    style={{ top: y }}
+                  />
+                ))}
+                
+                {/* Alignment Indicators */}
+                {smartGuides.alignments.map((alignment, index) => {
+                  const element = page.elements.find(el => el.id === alignment.elementId);
+                  if (!element) return null;
+                  
+                  return (
+                    <div
+                      key={`alignment-${index}`}
+                      className="absolute bg-blue-500 text-white text-xs px-2 py-1 rounded shadow-lg"
+                      style={{
+                        left: alignment.type.includes('left') || alignment.type.includes('right') || alignment.type.includes('center') 
+                          ? alignment.position - 20 
+                          : element.position.x + element.size.width / 2 - 20,
+                        top: alignment.type.includes('top') || alignment.type.includes('bottom') || alignment.type.includes('middle')
+                          ? alignment.position - 20
+                          : element.position.y + element.size.height / 2 - 20,
+                        fontSize: '10px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {alignment.type}
+                    </div>
+                  );
+                })}
+                
+                {/* Distance Measurements */}
+                {smartGuides.distances.map((distance, index) => (
+                  <div
+                    key={`distance-${index}`}
+                    className="absolute bg-green-500 text-white text-xs px-2 py-1 rounded shadow-lg font-mono"
+                    style={{
+                      left: distance.x - 15,
+                      top: distance.y - 10,
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      minWidth: '30px',
+                      textAlign: 'center'
+                    }}
+                  >
+                    {distance.distance}px
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Elements */}
             {page.elements.map(renderElement)}

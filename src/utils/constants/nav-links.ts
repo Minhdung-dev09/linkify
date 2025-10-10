@@ -14,19 +14,19 @@ export const NAV_LINKS = [
             {
                 title: "Bảo vệ bằng mật khẩu",
                 tagline: "Bảo vệ liên kết bằng mật khẩu.",
-                href: "/dashboard/links/create",
+                href: "/dashboard",
                 icon: LockIcon,
             },
             {
                 title: "Phân tích nâng cao",
                 tagline: "Hiểu rõ ai đang bấm vào liên kết.",
-                href: "/dashboard/links/create",
+                href: "/dashboard",
                 icon: LineChartIcon,
             },
             {
                 title: "Mã QR tuỳ chỉnh",
                 tagline: "Dùng QR để tiếp cận người dùng.",
-                href: "/dashboard/links/create",
+                href: "/dashboard",
                 icon: QrCodeIcon,
             },
         ],
