@@ -129,27 +129,6 @@ const MobileNavbar = () => {
                                                 </AccordionContent>
                                             </>
                                         ) : (
-                                            link.isModal ? (
-                                                <button
-                                                    onClick={() => {
-                                                        setInvestorOpen(true);
-                                                        handleClose();
-                                                    }}
-                                                    className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
-                                                >
-                                                    <span>{link.title}</span>
-                                                </button>
-                                            ) : link.isModal ? (
-                                                <button
-                                                    onClick={() => {
-                                                        setPricingModalOpen(true);
-                                                        handleClose();
-                                                    }}
-                                                    className="flex items-center w-full py-4 font-medium text-muted-foreground hover:text-foreground"
-                                                >
-                                                    <span>{link.title}</span>
-                                                </button>
-                                            ) : (
                                                 <Link
                                                     href={link.href}
                                                     onClick={handleClose}
@@ -157,7 +136,7 @@ const MobileNavbar = () => {
                                                 >
                                                     <span>{link.title}</span>
                                                 </Link>
-                                            )
+                                            
                                         )}
                                     </AccordionItem>
                                 ))}
