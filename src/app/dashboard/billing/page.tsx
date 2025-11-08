@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { getToken } from "@/lib/auth";
 import { PLANS } from "@/utils";
+import { apiGetPlans, apiGetSubscription, apiCreatePayment } from "@/lib/api";
 
 const PAYMENT_METHODS = [
-  { key: "card", label: "Thẻ ngân hàng" },
-  { key: "paypal", label: "PayPal" },
+  { key: "stripe", label: "Thẻ ngân hàng (Stripe)" },
   { key: "vnpay", label: "VNPay" },
 ] as const;
 
@@ -22,45 +23,113 @@ type PaymentMethod = typeof PAYMENT_METHODS[number]["key"];
 function BillingPageInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const [selectedPlan, setSelectedPlan] = useState<string>("Pro");
+  const [selectedPlan, setSelectedPlan] = useState<string>("pro-monthly");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [method, setMethod] = useState<PaymentMethod>("card");
+  const [method, setMethod] = useState<PaymentMethod>("stripe");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = getToken();
     if (!token) {
       router.replace(`/auth/sign-in?redirect=${encodeURIComponent("/dashboard/billing")}`);
+      return;
     }
-  }, [router]);
 
-  useEffect(() => {
-    const p = (params.get("plan") || localStorage.getItem("preferred_plan") || "Pro").toString();
-    const safe = PLANS.find(pl => pl.name.toLowerCase() === p.toLowerCase());
-    setSelectedPlan(safe?.name || "Pro");
-    const cycle = (params.get("cycle") || "monthly") as any;
-    setBillingCycle(cycle === "yearly" ? "yearly" : "monthly");
-  }, [params]);
+    // Load plans and subscription data
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load plans
+        const plansResponse = await apiGetPlans();
+        setPlans(plansResponse.plans);
+        
+        // Load user subscription
+        const subscriptionResponse = await apiGetSubscription(token);
+        setSubscription(subscriptionResponse.subscription);
+        
+        // Set current plan from URL params or user's current plan
+        const planParam = params.get("plan");
+        if (planParam) {
+          setSelectedPlan(planParam);
+        } else if (subscriptionResponse.subscription?.plan) {
+          setSelectedPlan(subscriptionResponse.subscription.plan);
+        }
+        
+        const cycle = (params.get("cycle") || "monthly") as any;
+        setBillingCycle(cycle === "yearly" ? "yearly" : "monthly");
+        
+      } catch (error) {
+        console.error("Error loading billing data:", error);
+        toast.error("Không thể tải dữ liệu thanh toán");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [router, params]);
 
   const currentPrice = useMemo(() => {
-    const plan = PLANS.find(p => p.name === selectedPlan);
+    const plan = plans.find(p => p.id === selectedPlan);
     if (!plan) return 0;
     return billingCycle === "monthly" ? plan.price.monthly : plan.price.yearly;
-  }, [selectedPlan, billingCycle]);
+  }, [selectedPlan, billingCycle, plans]);
 
   const handleCheckout = async () => {
     setIsProcessing(true);
     try {
-      // Giả lập tạo phiên thanh toán: tạm thời điều hướng theo method
-      // TODO: khi có BE, gọi API tạo checkout session và redirect URL
-      const plan = selectedPlan.toLowerCase();
-      const cycle = billingCycle;
-      const redirect = `/dashboard/billing/processing?plan=${encodeURIComponent(plan)}&cycle=${cycle}&method=${method}`;
-      router.push(redirect);
+      const token = getToken();
+      if (!token) {
+        toast.error("Vui lòng đăng nhập lại");
+        router.push("/auth/sign-in");
+        return;
+      }
+
+      // Create payment with backend API
+      const paymentResponse = await apiCreatePayment(token, {
+        plan: selectedPlan,
+        paymentMethod: method,
+        billingCycle: billingCycle
+      });
+
+      if (paymentResponse.success) {
+        if (method === "vnpay" && paymentResponse.paymentUrl) {
+          // Redirect to VNPay
+          window.location.href = paymentResponse.paymentUrl;
+        } else if (method === "stripe" && paymentResponse.sessionData?.clientSecret) {
+          // For Stripe, redirect to processing page with client secret
+          const redirect = `/dashboard/billing/processing?plan=${encodeURIComponent(selectedPlan)}&cycle=${billingCycle}&method=${method}&clientSecret=${paymentResponse.sessionData.clientSecret}&paymentId=${paymentResponse.paymentId}`;
+          router.push(redirect);
+        } else {
+          toast.error("Không thể tạo phiên thanh toán");
+        }
+      } else {
+        toast.error("Tạo thanh toán thất bại");
+      }
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      toast.error(error.message || "Có lỗi xảy ra khi thanh toán");
     } finally {
       setIsProcessing(false);
     }
   };
+
+  if (loading) {
+    return (
+      <MaxWidthWrapper className="mb-24">
+        <div className="py-10 max-w-3xl mx-auto">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-4">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </MaxWidthWrapper>
+    );
+  }
 
   return (
     <MaxWidthWrapper className="mb-24">
@@ -68,6 +137,16 @@ function BillingPageInner() {
         <div className="py-10 max-w-3xl mx-auto">
           <h1 className="text-2xl md:text-4xl font-semibold font-heading text-center !leading-tight">Thanh toán</h1>
           <p className="text-muted-foreground text-center mt-3">Chọn gói và phương thức thanh toán</p>
+          
+          {subscription && (
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              <h3 className="font-medium">Gói hiện tại: {subscription.plan}</h3>
+              <p className="text-sm text-muted-foreground">
+                Trạng thái: {subscription.status} • 
+                {subscription.endDate && ` Hết hạn: ${new Date(subscription.endDate).toLocaleDateString('vi-VN')}`}
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
             <Card className="border-border rounded-xl">
@@ -82,32 +161,32 @@ function BillingPageInner() {
                   </TabsList>
                   <TabsContent value="monthly">
                     <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="mt-4">
-                      {PLANS.map((pl) => (
-                        <div key={pl.name} className="flex items-center justify-between p-3 border rounded-lg mb-3">
+                      {plans.map((pl) => (
+                        <div key={pl.id} className="flex items-center justify-between p-3 border rounded-lg mb-3">
                           <div className="flex items-center gap-3">
-                            <RadioGroupItem id={`plan-${pl.name}`} value={pl.name} />
-                            <Label htmlFor={`plan-${pl.name}`} className="cursor-pointer">
+                            <RadioGroupItem id={`plan-${pl.id}`} value={pl.id} />
+                            <Label htmlFor={`plan-${pl.id}`} className="cursor-pointer">
                               <div className="font-medium">{pl.name}</div>
-                              <div className="text-sm text-muted-foreground">{pl.info}</div>
+                              <div className="text-sm text-muted-foreground">{pl.description}</div>
                             </Label>
                           </div>
-                          <div className="text-right font-semibold">${pl.price.monthly}/mo</div>
+                          <div className="text-right font-semibold">{pl.price.monthly.toLocaleString('vi-VN')} VND/tháng</div>
                         </div>
                       ))}
                     </RadioGroup>
                   </TabsContent>
                   <TabsContent value="yearly">
                     <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="mt-4">
-                      {PLANS.map((pl) => (
-                        <div key={pl.name} className="flex items-center justify-between p-3 border rounded-lg mb-3">
+                      {plans.map((pl) => (
+                        <div key={pl.id} className="flex items-center justify-between p-3 border rounded-lg mb-3">
                           <div className="flex items-center gap-3">
-                            <RadioGroupItem id={`plan-y-${pl.name}`} value={pl.name} />
-                            <Label htmlFor={`plan-y-${pl.name}`} className="cursor-pointer">
+                            <RadioGroupItem id={`plan-y-${pl.id}`} value={pl.id} />
+                            <Label htmlFor={`plan-y-${pl.id}`} className="cursor-pointer">
                               <div className="font-medium">{pl.name}</div>
-                              <div className="text-sm text-muted-foreground">{pl.info}</div>
+                              <div className="text-sm text-muted-foreground">{pl.description}</div>
                             </Label>
                           </div>
-                          <div className="text-right font-semibold">${pl.price.yearly}/yr</div>
+                          <div className="text-right font-semibold">{pl.price.yearly.toLocaleString('vi-VN')} VND/năm</div>
                         </div>
                       ))}
                     </RadioGroup>
@@ -133,7 +212,7 @@ function BillingPageInner() {
                 <div className="mt-6 p-3 bg-muted rounded-lg text-sm text-muted-foreground">
                   <div className="flex items-center justify-between">
                     <span>Tổng thanh toán</span>
-                    <span className="font-semibold">${currentPrice}</span>
+                    <span className="font-semibold">{currentPrice.toLocaleString('vi-VN')} VND</span>
                   </div>
                 </div>
 

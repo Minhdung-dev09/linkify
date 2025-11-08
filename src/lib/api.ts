@@ -617,4 +617,103 @@ export async function apiAdminDeleteFeedback(token: string, feedbackId: string):
   return data;
 }
 
+// Billing APIs
+export interface BillingPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: { monthly: number; yearly: number };
+  features: string[];
+  limits: {
+    links: number;
+    landingPages: number;
+    clicksPerMonth: number;
+    aiSuggestions: number;
+  };
+}
+
+export interface UserSubscription {
+  plan: string;
+  status: string;
+  startDate: string;
+  endDate?: string;
+  paymentMethod?: string;
+}
+
+export interface UserUsage {
+  linksCreated: number;
+  landingPagesCreated: number;
+  clicksThisMonth: number;
+  lastResetDate: string;
+}
+
+export interface CreatePaymentResponse {
+  success: boolean;
+  paymentUrl?: string;
+  sessionData?: {
+    clientSecret?: string;
+    paymentId: string;
+    orderId: string;
+    amount: number;
+  };
+  paymentId: string;
+}
+
+// Get available plans
+export async function apiGetPlans(): Promise<{ success: boolean; plans: BillingPlan[] }> {
+  const res = await fetch(`${getBaseUrl()}/api/billing/plans`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy danh sách gói thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+// Get user's subscription
+export async function apiGetSubscription(token: string): Promise<{ 
+  success: boolean; 
+  subscription: UserSubscription;
+  usage: UserUsage;
+}> {
+  const res = await fetch(`${getBaseUrl()}/api/billing/subscription`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Lấy thông tin subscription thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+// Create payment
+export async function apiCreatePayment(
+  token: string, 
+  payload: { 
+    plan: string; 
+    paymentMethod: string; 
+    billingCycle?: string; 
+  }
+): Promise<CreatePaymentResponse> {
+  const res = await fetch(`${getBaseUrl()}/api/billing/create-payment`, {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json", 
+      Authorization: `Bearer ${token}` 
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    const msg = (data as any)?.message || `Tạo thanh toán thất bại (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
 

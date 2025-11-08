@@ -12,12 +12,12 @@ function BillingProcessingPageInner() {
 
   const plan = (params.get("plan") || "pro").toString();
   const cycle = (params.get("cycle") || "monthly").toString();
-  const method = (params.get("method") || "card").toString();
+  const method = (params.get("method") || "stripe").toString();
 
   const title = useMemo(() => {
-    if (method === "paypal") return "Thanh toán qua PayPal";
     if (method === "vnpay") return "Thanh toán qua VNPay";
-    return "Thanh toán bằng thẻ";
+    if (method === "stripe") return "Thanh toán bằng thẻ (Stripe)";
+    return "Thanh toán";
   }, [method]);
 
   return (
@@ -32,19 +32,14 @@ function BillingProcessingPageInner() {
               <CardTitle>Hướng dẫn</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {method === "card" && (
+              {method === "stripe" && (
                 <div className="text-sm text-muted-foreground">
-                  Nhập thông tin thẻ tại cửa sổ thanh toán (sẽ tích hợp khi có backend). Tạm thời đây là trang mô phỏng luồng thanh toán.
-                </div>
-              )}
-              {method === "paypal" && (
-                <div className="text-sm text-muted-foreground">
-                  Bạn sẽ được chuyển tới PayPal để hoàn tất giao dịch khi backend sẵn sàng.
+                  Nhập thông tin thẻ tại cửa sổ thanh toán Stripe (sẽ tích hợp khi có backend). Tạm thời đây là trang mô phỏng luồng thanh toán.
                 </div>
               )}
               {method === "vnpay" && (
                 <div className="text-sm text-muted-foreground">
-                  Bạn sẽ được chuyển tới cổng VNPay khi backend sẵn sàng.
+                  Bạn sẽ được chuyển tới cổng VNPay để hoàn tất giao dịch khi backend sẵn sàng.
                 </div>
               )}
 
