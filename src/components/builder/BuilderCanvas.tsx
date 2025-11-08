@@ -22,6 +22,7 @@ import {
   Link
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ElementRenderer } from "@/components/builder/elements/renderers";
 import CanvasCarousel from "@/components/builder/renderers/CanvasCarousel";
 
 interface BuilderCanvasProps {
@@ -141,7 +142,17 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
           if (!element) return;
 
           if (payload.type === 'drag') {
-            const newX = Math.max(0, element.position.x + payload.deltaX);
+            // Calculate boundaries based on maxWidth
+            // Elements are now positioned absolute within a centered container with maxWidth
+            // So boundaries are relative to that container (0 to maxWidth - element.width)
+            const maxWidth = page.settings.maxWidth;
+            
+            // Boundaries relative to the centered container (elements are positioned relative to container)
+            const leftBoundary = 0;
+            const rightBoundary = maxWidth - element.size.width;
+            
+            // Constrain X position within boundaries
+            const newX = Math.max(leftBoundary, Math.min(rightBoundary, element.position.x + payload.deltaX));
             const newY = Math.max(0, element.position.y + payload.deltaY);
             
             let finalX = newX;
@@ -182,28 +193,48 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
               position: { x: finalX, y: finalY }
             });
           } else if (payload.type === 'resize' && payload.handle) {
+            // Calculate boundaries for resize
+            // Elements are now positioned absolute within a centered container with maxWidth
+            // So boundaries are relative to that container (0 to maxWidth)
+            const maxWidth = page.settings.maxWidth;
+            
+            // Boundaries relative to the centered container (elements are positioned relative to container)
+            const leftBoundary = 0;
+            const rightBoundary = maxWidth;
+            
             const newSize = { ...element.size } as { width: number; height: number };
             const newPosition = { ...element.position } as { x: number; y: number };
+            
             switch (payload.handle) {
               case 'nw':
                 newSize.width = Math.max(20, element.size.width - payload.deltaX);
                 newSize.height = Math.max(20, element.size.height - payload.deltaY);
                 newPosition.x = element.position.x + payload.deltaX;
                 newPosition.y = element.position.y + payload.deltaY;
+                // Constrain to boundaries
+                newPosition.x = Math.max(leftBoundary, Math.min(rightBoundary - newSize.width, newPosition.x));
+                newSize.width = Math.min(newSize.width, rightBoundary - newPosition.x);
                 break;
               case 'ne':
                 newSize.width = Math.max(20, element.size.width + payload.deltaX);
                 newSize.height = Math.max(20, element.size.height - payload.deltaY);
                 newPosition.y = element.position.y + payload.deltaY;
+                // Constrain to boundaries
+                newSize.width = Math.min(newSize.width, rightBoundary - newPosition.x);
                 break;
               case 'sw':
                 newSize.width = Math.max(20, element.size.width - payload.deltaX);
                 newSize.height = Math.max(20, element.size.height + payload.deltaY);
                 newPosition.x = element.position.x + payload.deltaX;
+                // Constrain to boundaries
+                newPosition.x = Math.max(leftBoundary, Math.min(rightBoundary - newSize.width, newPosition.x));
+                newSize.width = Math.min(newSize.width, rightBoundary - newPosition.x);
                 break;
               case 'se':
                 newSize.width = Math.max(20, element.size.width + payload.deltaX);
                 newSize.height = Math.max(20, element.size.height + payload.deltaY);
+                // Constrain to boundaries
+                newSize.width = Math.min(newSize.width, rightBoundary - newPosition.x);
                 break;
               case 'n':
                 newSize.height = Math.max(20, element.size.height - payload.deltaY);
@@ -215,9 +246,14 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
               case 'w':
                 newSize.width = Math.max(20, element.size.width - payload.deltaX);
                 newPosition.x = element.position.x + payload.deltaX;
+                // Constrain to boundaries
+                newPosition.x = Math.max(leftBoundary, Math.min(rightBoundary - newSize.width, newPosition.x));
+                newSize.width = Math.min(newSize.width, rightBoundary - newPosition.x);
                 break;
               case 'e':
                 newSize.width = Math.max(20, element.size.width + payload.deltaX);
+                // Constrain to boundaries
+                newSize.width = Math.min(newSize.width, rightBoundary - newPosition.x);
                 break;
             }
             onUpdateElement(payload.elementId, { size: newSize, position: newPosition });
@@ -492,8 +528,6 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
        opacity: element.visible === false ? 0.5 : 1,
        pointerEvents: element.locked ? 'none' : 'auto',
        cursor: isDragging ? 'grabbing' : isResizing ? 'grabbing' : 'grab',
-       transform: isDragging || isResizing ? 'scale(1.02)' : 'scale(1)',
-       transition: isDragging || isResizing ? 'none' : 'transform 0.1s ease',
      };
 
     const handleMouseEnter = () => {
@@ -522,1013 +556,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
       >
         {/* Element Content */}
         <div className="w-full h-full">
-          {element.type === 'heading' && (
-            <h1 
-              className="w-full h-full flex items-center"
-              style={{
-                fontSize: element.props.fontSize || 32,
-                fontWeight: element.props.fontWeight || 'bold',
-                color: element.props.color || '#000000',
-                textAlign: element.props.textAlign || 'left',
-                fontFamily: element.props.fontFamily || 'inherit',
-                fontStyle: element.props.fontStyle || 'normal',
-                textDecoration: element.props.textDecoration || 'none'
-              }}
-            >
-              {element.props.text || 'Heading Text'}
-            </h1>
-          )}
-
-          {element.type === 'paragraph' && (
-            <p 
-              className="w-full h-full flex items-start"
-              style={{
-                fontSize: element.props.fontSize || 16,
-                color: element.props.color || '#666666',
-                textAlign: element.props.textAlign || 'left',
-                fontFamily: element.props.fontFamily || 'inherit',
-                lineHeight: element.props.lineHeight || 1.5,
-                fontWeight: element.props.fontWeight || 'normal',
-                fontStyle: element.props.fontStyle || 'normal',
-                textDecoration: element.props.textDecoration || 'none'
-              }}
-            >
-              {element.props.text || 'Paragraph text goes here...'}
-            </p>
-          )}
-
-          {element.type === 'button' && (
-            <button
-              className="w-full h-full flex items-center justify-center rounded-md transition-all hover:opacity-90"
-              style={{
-                backgroundColor: element.props.backgroundColor || '#3b82f6',
-                color: element.props.color || '#ffffff',
-                borderRadius: element.props.borderRadius || 8,
-                fontSize: element.props.fontSize || 16,
-                fontWeight: element.props.fontWeight || 'medium',
-                fontStyle: element.props.fontStyle || 'normal',
-                textDecoration: element.props.textDecoration || 'none',
-                textAlign: element.props.textAlign || 'center'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (element.props.linkUrl) {
-                  if (element.props.linkTarget === '_blank') {
-                    window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                  } else {
-                    window.location.href = element.props.linkUrl;
-                  }
-                }
-              }}
-            >
-              {element.props.text || 'Click Me'}
-            </button>
-          )}
-
-          {element.type === 'image' && (
-            <div 
-              className="w-full h-full bg-gray-200 rounded-md overflow-hidden flex items-center justify-center cursor-pointer"
-              style={{
-                backgroundColor: element.props.backgroundColor || '#f3f4f6'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (element.props.linkUrl) {
-                  if (element.props.linkTarget === '_blank') {
-                    window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                  } else {
-                    window.location.href = element.props.linkUrl;
-                  }
-                }
-              }}
-            >
-              {element.props.src ? (
-                <img
-                  src={element.props.src}
-                  alt={element.props.alt || 'Image'}
-                  className="w-full h-full object-cover"
-                  style={{
-                    objectFit: element.props.objectFit || 'cover'
-                  }}
-                />
-              ) : (
-                <div className="text-gray-500 text-sm">No Image</div>
-              )}
-            </div>
-          )}
-
-          {element.type === 'container' && (
-            <div 
-              className="w-full h-full border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center"
-              style={{
-                backgroundColor: element.props.backgroundColor || '#f8f9fa',
-                padding: element.props.padding || 20
-              }}
-            >
-              <span className="text-gray-500 text-sm">Container</span>
-            </div>
-          )}
-
-          {element.type === 'section' && (
-            <div 
-              className="w-full h-full border border-gray-200 rounded-md"
-              style={{
-                backgroundColor: element.props.backgroundColor || '#ffffff',
-                padding: element.props.padding || 40
-              }}
-            >
-              <div className="text-gray-500 text-sm">Section</div>
-            </div>
-          )}
-
-                 {element.type === 'spacer' && (
-                   <div
-                     className="w-full h-full bg-gray-100 border border-gray-200 rounded"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#f3f4f6'
-                     }}
-                   >
-                     <div className="text-gray-500 text-xs text-center">Spacer</div>
-                   </div>
-                 )}
-
-                 {element.type === 'header' && (
-                   <div
-                      className="w-full h-full flex items-center justify-between px-4 border-b cursor-pointer transition-all duration-200 hover:shadow-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#1f2937',
-                        color: element.props.textColor || '#ffffff',
-                        paddingTop: element.props.paddingTop || 16,
-                        paddingRight: element.props.paddingRight || 24,
-                        paddingBottom: element.props.paddingBottom || 16,
-                        paddingLeft: element.props.paddingLeft || 24,
-                        marginTop: element.props.marginTop || 0,
-                        marginRight: element.props.marginRight || 0,
-                        marginBottom: element.props.marginBottom || 0,
-                        marginLeft: element.props.marginLeft || 0,
-                        borderWidth: element.props.borderWidth || 0,
-                        borderStyle: element.props.borderStyle || 'solid',
-                        borderColor: element.props.borderColor || 'transparent',
-                        borderRadius: element.props.borderRadius || 0,
-                        boxShadow: element.props.shadowX || element.props.shadowY || element.props.shadowBlur || element.props.shadowColor 
-                          ? `${element.props.shadowX || 0}px ${element.props.shadowY || 2}px ${element.props.shadowBlur || 4}px ${element.props.shadowColor || 'rgba(0, 0, 0, 0.1)'}`
-                          : 'none',
-                        backgroundImage: element.props.backgroundImage ? `url(${element.props.backgroundImage})` : 'none',
-                        backgroundPosition: element.props.backgroundPosition || 'center',
-                        backgroundSize: element.props.backgroundSize || 'cover',
-                        backgroundRepeat: element.props.backgroundRepeat || 'no-repeat',
-                        display: element.props.display || 'flex',
-                        alignItems: element.props.alignItems || 'center',
-                        justifyContent: element.props.justifyContent || 'space-between',
-                        position: element.props.position || 'sticky',
-                        top: element.props.top || 0,
-                        zIndex: element.props.zIndex || 1000,
-                        overflow: element.props.overflow || 'visible',
-                        minHeight: element.props.minHeight || 80,
-                        maxWidth: element.props.maxWidth || '100%'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (element.props.linkUrl) {
-                          if (element.props.linkTarget === '_blank') {
-                            window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                          } else {
-                            window.location.href = element.props.linkUrl;
-                          }
-                        }
-                      }}
-                    >
-                      <div 
-                        className="font-bold cursor-pointer transition-all duration-200 hover:scale-105"
-                        style={{
-                          fontSize: element.props.logoFontSize || 24,
-                          fontWeight: element.props.logoFontWeight || 'bold',
-                          color: element.props.logoColor || '#ffffff',
-                          width: element.props.logoWidth || 120,
-                          height: element.props.logoHeight || 40,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: element.props.logoPosition === 'center' ? 'center' : 'flex-start'
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (element.props.logoLink) {
-                            if (element.props.logoLinkTarget === '_blank') {
-                              window.open(element.props.logoLink, '_blank', 'noopener,noreferrer');
-                            } else {
-                              window.location.href = element.props.logoLink;
-                            }
-                          }
-                        }}
-                      >
-                        {element.props.logoImageUrl ? (
-                          <img 
-                            src={element.props.logoImageUrl} 
-                            alt={element.props.logoText || 'Logo'}
-                            style={{
-                              width: element.props.logoWidth || 120,
-                              height: element.props.logoHeight || 40,
-                              objectFit: 'contain'
-                            }}
-                          />
-                        ) : (
-                          element.props.logoText || 'Logo'
-                        )}
-                      </div>
-                      <div 
-                        className="flex"
-                        style={{
-                          gap: element.props.navSpacing || 24
-                        }}
-                      >
-                        {(element.props.navItems || []).map((item: any, index: number) => (
-                          <span 
-                            key={index} 
-                            className="hover:underline cursor-pointer transition-all duration-200 hover:scale-105"
-                            style={{
-                              fontSize: element.props.navFontSize || 16,
-                              fontWeight: element.props.navFontWeight || 'medium',
-                              color: element.props.navColor || '#ffffff',
-                              padding: `${element.props.navPadding || 12}px`,
-                              borderRadius: `${element.props.navBorderRadius || 6}px`,
-                              transition: element.props.navTransition || 'all 0.3s ease',
-                              transform: 'translateY(0)',
-                              boxShadow: 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.color = element.props.navHoverColor || '#f3f4f6';
-                              e.currentTarget.style.backgroundColor = element.props.navHoverBackground || 'rgba(255, 255, 255, 0.1)';
-                              e.currentTarget.style.transform = element.props.navTransform || 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = element.props.navShadow || '0 4px 8px rgba(0, 0, 0, 0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.color = element.props.navColor || '#ffffff';
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = 'none';
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (item.link) {
-                                if (item.target === '_blank') {
-                                  window.open(item.link, '_blank', 'noopener,noreferrer');
-                                } else {
-                                  window.location.href = item.link;
-                                }
-                              }
-                            }}
-                          >
-                            {typeof item === 'string' ? item : item.label}
-                         </span>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                {element.type === 'footer' && (
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      backgroundColor: element.props.backgroundColor || '#374151',
-                      color: element.props.textColor || '#ffffff',
-                      paddingTop: element.props.paddingY ?? 16,
-                      paddingBottom: element.props.paddingY ?? 16,
-                      paddingLeft: element.props.paddingX ?? 24,
-                      paddingRight: element.props.paddingX ?? 24
-                    }}
-                  >
-                    <div className="w-full h-full flex flex-col gap-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="text-sm whitespace-pre-line">
-                          {element.props.copyright || '© 2025 Your Company'}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex flex-wrap gap-3 justify-center text-sm">
-                            {(element.props.links || []).map((ln: any, idx: number) => (
-                              <span key={idx} className="underline cursor-pointer" onClick={(e) => {
-                                e.stopPropagation();
-                                if (ln?.href) {
-                                  if (ln?.target === '_blank') {
-                                    window.open(ln.href, '_blank', 'noopener,noreferrer');
-                                  } else {
-                                    window.location.href = ln.href;
-                                  }
-                                }
-                              }}>
-                                {typeof ln === 'string' ? ln : (ln?.label || 'Link')}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="text-right text-sm min-w-[180px]">
-                          {element.props.address && <div>{element.props.address}</div>}
-                          {element.props.phone && <div>{element.props.phone}</div>}
-                          {element.props.email && <div>{element.props.email}</div>}
-                        </div>
-                      </div>
-
-                      {element.props.showMap && element.props.mapEmbedUrl && (() => {
-                        let embedUrl = String(element.props.mapEmbedUrl || '').trim();
-                        if (embedUrl.toLowerCase().includes('<iframe')) {
-                          const m = embedUrl.match(/src=["']([^"']+)["']/i);
-                          if (m && m[1]) embedUrl = m[1];
-                        }
-                        // normalize protocol slashes (e.g., https:/ -> https://)
-                        if (/^https?:\/(?!\/)/i.test(embedUrl)) {
-                          embedUrl = embedUrl.replace(/^https?:\//i, (p) => p + '/');
-                        }
-                        if (!/^https?:\/\//i.test(embedUrl)) {
-                          // if still not an absolute URL, don't render
-                          return null;
-                        }
-                        return (
-                        <div className="w-full overflow-hidden rounded-md border border-white/10">
-                          <iframe
-                            src={embedUrl}
-                            className="w-full"
-                            style={{ height: `${element.props.mapHeight ?? 220}px`, border: 0, pointerEvents: 'none' }}
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                )}
-
-                {element.type === 'carousel' && (
-                  <CanvasCarousel element={element} />
-                )}
-
-                 {element.type === 'hero' && (
-                   <div
-                     className="w-full h-full relative flex flex-col items-center justify-center text-center p-8 rounded-lg"
-                     style={{
-                       backgroundImage: element.props.backgroundImage ? `url(${element.props.backgroundImage})` : 'none',
-                       backgroundColor: element.props.backgroundColor || '#f8fafc',
-                       backgroundSize: 'cover',
-                       backgroundPosition: 'center'
-                     }}
-                   >
-                     {element.props.overlay && (
-                       <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg"></div>
-                     )}
-                     <div className="relative z-10">
-                       <h1 className="text-3xl font-bold mb-4" style={{ color: element.props.textColor || '#1f2937' }}>
-                         {element.props.title || 'Welcome'}
-                       </h1>
-                       <p className="text-lg mb-6" style={{ color: element.props.textColor || '#4b5563' }}>
-                         {element.props.subtitle || 'Subtitle'}
-                       </p>
-                       <button
-                         className="px-6 py-3 rounded-lg font-medium"
-                         style={{
-                           backgroundColor: element.props.buttonColor || '#3b82f6',
-                           color: '#ffffff'
-                         }}
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           if (element.props.linkUrl) {
-                             if (element.props.linkTarget === '_blank') {
-                               window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                             } else {
-                               window.location.href = element.props.linkUrl;
-                             }
-                           }
-                         }}
-                       >
-                         {element.props.buttonText || 'Get Started'}
-                       </button>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'pricing-card' && (
-                   <div
-                     className="w-full h-full p-6 border rounded-lg flex flex-col"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     {element.props.popular && (
-                       <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full self-center mb-4">
-                         Popular
-                       </div>
-                     )}
-                     <h3 className="text-xl font-bold mb-2">{element.props.title || 'Plan'}</h3>
-                     <div className="mb-4">
-                       <span className="text-3xl font-bold">{element.props.price || '$0'}</span>
-                       <span className="text-gray-500">{element.props.period || '/month'}</span>
-                     </div>
-                     <ul className="flex-1 space-y-2 mb-6">
-                       {(element.props.features || []).map((feature: string, index: number) => (
-                         <li key={index} className="text-sm">✓ {feature}</li>
-                       ))}
-                     </ul>
-                     <button
-                       className="w-full py-2 rounded-lg font-medium"
-                       style={{
-                         backgroundColor: element.props.buttonColor || '#3b82f6',
-                         color: '#ffffff'
-                       }}
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         if (element.props.linkUrl) {
-                           if (element.props.linkTarget === '_blank') {
-                             window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                           } else {
-                             window.location.href = element.props.linkUrl;
-                           }
-                         }
-                       }}
-                     >
-                       {element.props.buttonText || 'Get Started'}
-                     </button>
-                   </div>
-                 )}
-
-                 {element.type === 'testimonial' && (
-                   <div
-                     className="w-full h-full p-6 border rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="flex items-center mb-4">
-                       <div className="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
-                       <div>
-                         <div className="font-semibold">{element.props.author || 'Author'}</div>
-                         <div className="text-sm text-gray-500">{element.props.role || 'Role'}</div>
-                       </div>
-                     </div>
-                     <p className="text-gray-700 mb-4">&ldquo;{element.props.quote || 'Testimonial quote'}&rdquo;</p>
-                     <div className="flex">
-                       {Array.from({ length: element.props.rating || 5 }).map((_, index) => (
-                         <span key={index} className="text-yellow-400">★</span>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'feature-list' && (
-                   <div
-                     className="w-full h-full p-6"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff'
-                     }}
-                   >
-                     <h3 className="text-xl font-bold mb-4">{element.props.title || 'Features'}</h3>
-                     <div className="space-y-3">
-                       {(element.props.features || []).map((feature: any, index: number) => (
-                         <div key={index} className="flex items-start">
-                           <span className="text-green-500 mr-2">{feature.icon || '✓'}</span>
-                           <div>
-                             <div className="font-medium">{feature.text}</div>
-                             <div className="text-sm text-gray-500">{feature.description}</div>
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'cta' && (
-                   <div
-                     className="w-full h-full flex flex-col items-center justify-center text-center p-8 rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#3b82f6',
-                       color: element.props.textColor || '#ffffff'
-                     }}
-                   >
-                     <h2 className="text-2xl font-bold mb-2">{element.props.title || 'Call to Action'}</h2>
-                     <p className="mb-6">{element.props.subtitle || 'Subtitle'}</p>
-                     <button
-                       className="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:bg-gray-100"
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         if (element.props.linkUrl) {
-                           if (element.props.linkTarget === '_blank') {
-                             window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                           } else {
-                             window.location.href = element.props.linkUrl;
-                           }
-                         }
-                       }}
-                     >
-                       {element.props.buttonText || 'Button'}
-                     </button>
-                   </div>
-                 )}
-
-                 {element.type === 'contact-form' && (
-                   <div
-                     className="w-full h-full p-6 border rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <h3 className="text-xl font-bold mb-4">{element.props.title || 'Contact Us'}</h3>
-                     <div className="space-y-4">
-                       {(element.props.fields || []).map((field: any, index: number) => (
-                         <div key={index}>
-                           <label className="block text-sm font-medium mb-1">{field.label}</label>
-                           {field.type === 'textarea' ? (
-                             <textarea
-                               className="w-full p-2 border rounded"
-                               placeholder={field.label}
-                               rows={3}
-                             />
-                           ) : (
-                             <input
-                               type={field.type}
-                               className="w-full p-2 border rounded"
-                               placeholder={field.label}
-                             />
-                           )}
-                         </div>
-                       ))}
-                       <button
-                         className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium"
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           if (element.props.linkUrl) {
-                             if (element.props.linkTarget === '_blank') {
-                               window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                             } else {
-                               window.location.href = element.props.linkUrl;
-                             }
-                           }
-                         }}
-                       >
-                         {element.props.buttonText || 'Send Message'}
-                       </button>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'newsletter' && (
-                   <div
-                     className="w-full h-full p-6 border rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <h3 className="text-lg font-bold mb-2">{element.props.title || 'Newsletter'}</h3>
-                     <p className="text-sm text-gray-600 mb-4">{element.props.subtitle || 'Subtitle'}</p>
-                     <div className="flex gap-2">
-                       <input
-                         type="email"
-                         className="flex-1 p-2 border rounded"
-                         placeholder={element.props.placeholder || 'Enter your email'}
-                       />
-                       <button
-                         className="px-4 py-2 bg-blue-600 text-white rounded font-medium"
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           if (element.props.linkUrl) {
-                             if (element.props.linkTarget === '_blank') {
-                               window.open(element.props.linkUrl, '_blank', 'noopener,noreferrer');
-                             } else {
-                               window.location.href = element.props.linkUrl;
-                             }
-                           }
-                         }}
-                       >
-                         {element.props.buttonText || 'Subscribe'}
-                       </button>
-                     </div>
-                   </div>
-                 )}
-
-                 {/* New Advanced Elements */}
-                 {element.type === 'grid-layout' && (
-                   <div
-                     className="w-full h-full border-2 border-dashed border-gray-300 rounded-md p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#f8f9fa',
-                       display: 'grid',
-                       gridTemplateColumns: `repeat(${element.props.columns || 3}, 1fr)`,
-                       gap: `${element.props.gap || 16}px`,
-                       padding: `${element.props.padding || 20}px`
-                     }}
-                   >
-                     <div className="bg-white rounded p-2 text-xs text-center">Grid Item 1</div>
-                     <div className="bg-white rounded p-2 text-xs text-center">Grid Item 2</div>
-                     <div className="bg-white rounded p-2 text-xs text-center">Grid Item 3</div>
-                   </div>
-                 )}
-
-                 {element.type === 'flex-layout' && (
-                   <div
-                     className="w-full h-full border-2 border-dashed border-gray-300 rounded-md p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#f8f9fa',
-                       display: 'flex',
-                       flexDirection: element.props.direction || 'row',
-                       justifyContent: element.props.justifyContent || 'center',
-                       alignItems: element.props.alignItems || 'center',
-                       gap: `${element.props.gap || 16}px`,
-                       padding: `${element.props.padding || 20}px`
-                     }}
-                   >
-                     <div className="bg-white rounded p-2 text-xs">Flex Item 1</div>
-                     <div className="bg-white rounded p-2 text-xs">Flex Item 2</div>
-                     <div className="bg-white rounded p-2 text-xs">Flex Item 3</div>
-                   </div>
-                 )}
-
-                  {element.type === 'video-player' && (
-                    <div className="w-full h-full rounded-lg overflow-hidden bg-black">
-                      {(() => {
-                        const src: string = element.props.src || '';
-                        const autoplay = element.props.autoplay ? 1 : 0;
-                        const controls = element.props.controls === false ? 0 : 1;
-                        const loop = element.props.loop ? 1 : 0;
-                        const muted = element.props.muted ? 1 : 0;
-                        const start = parseInt(element.props.start || 0);
-                        const objectFit = element.props.objectFit || 'cover';
-                        const poster = element.props.poster;
-                        const isMoving = isDragging || isResizing;
-
-                        const toYouTubeEmbed = (url: string) => {
-                          try {
-                            if (!url) return null;
-                            const ytShort = url.match(/^https?:\/\/youtu\.be\/([\w-]{6,})/i);
-                            if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
-                            const ytWatch = url.match(/[?&]v=([\w-]{6,})/i);
-                            if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
-                            const ytEmbed = url.match(/^https?:\/\/(www\.)?youtube\.com\/embed\/([\w-]{6,})/i);
-                            if (ytEmbed) return `https://www.youtube.com/embed/${ytEmbed[2]}`;
-                            return null;
-                          } catch { return null; }
-                        };
-
-                        const yt = toYouTubeEmbed(src);
-                        if (yt && !isMoving) {
-                          const params = new URLSearchParams({ autoplay: String(autoplay), controls: String(controls), loop: String(loop), mute: String(muted), start: String(start) });
-                          const embedUrl = `${yt}?${params.toString()}`;
-                          return (
-                            <div className="relative w-full h-full" style={{ backgroundColor: '#000' }}>
-                              <iframe
-                                src={embedUrl}
-                                title={element.props.title || 'YouTube video'}
-                                className="absolute inset-0 w-full h-full"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                                style={{ pointerEvents: 'none' }}
-                              />
-                            </div>
-                          );
-                        }
-
-                        // If dragging/resizing, show lightweight placeholder (faster drag)
-                        if (isMoving) {
-                          return (
-                            <div className="relative w-full h-full" style={{ backgroundColor: '#000' }}>
-                              {poster ? (
-                                <img src={poster} alt="poster" className="absolute inset-0 w-full h-full" style={{ objectFit }} />
-                              ) : (
-                                <div className="absolute inset-0 flex items-center justify-center text-white/70 text-sm">Video (dragging)</div>
-                              )}
-                            </div>
-                          );
-                        }
-
-                        // Fallback to native video for direct files (mp4...)
-                        return (
-                          <div className="relative w-full h-full" style={{ backgroundColor: '#000' }}>
-                            <video
-                              src={src}
-                              className="absolute inset-0 w-full h-full"
-                              style={{ objectFit, pointerEvents: 'none' }}
-                              controls={element.props.controls !== false}
-                              autoPlay={!!element.props.autoplay}
-                              loop={!!element.props.loop}
-                              muted={!!element.props.muted}
-                              poster={poster}
-                            />
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                 {element.type === 'audio-player' && (
-                   <div
-                     className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#f8f9fa'
-                     }}
-                   >
-                     <div className="text-gray-600 text-center">
-                       <div className="text-lg mb-2">🎵</div>
-                       <div className="text-sm">{element.props.title || 'Audio Player'}</div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'image-gallery' && (
-                   <div
-                     className="w-full h-full bg-gray-100 rounded-lg p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#f8f9fa'
-                     }}
-                   >
-                     <div className="text-center text-gray-600">
-                       <div className="text-lg mb-2">🖼️</div>
-                       <div className="text-sm">Gallery ({element.props.images?.length || 0} images)</div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'accordion' && (
-                   <div
-                     className="w-full h-full border rounded-lg p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="text-sm text-gray-600 mb-2">Accordion</div>
-                     {(element.props.items || []).map((item: any, index: number) => (
-                       <div key={index} className="border-b border-gray-200 py-2">
-                         <div className="font-medium text-sm">{item.title}</div>
-                       </div>
-                     ))}
-                   </div>
-                 )}
-
-                 {element.type === 'tabs' && (
-                   <div
-                     className="w-full h-full border rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="flex border-b">
-                       {(element.props.tabs || []).map((tab: any, index: number) => (
-                         <div key={index} className="px-4 py-2 text-sm border-r">
-                           {tab.label}
-                         </div>
-                       ))}
-                     </div>
-                     <div className="p-4 text-sm text-gray-600">
-                       Tab Content
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'modal' && (
-                   <div
-                     className="w-full h-full border rounded-lg p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="text-center text-gray-600">
-                       <div className="text-lg mb-2">📋</div>
-                       <div className="text-sm">Modal Dialog</div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'dropdown' && (
-                   <div
-                     className="w-full h-full border rounded-lg p-2"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="text-sm text-gray-600">{element.props.label || 'Select Option'}</div>
-                   </div>
-                 )}
-
-                 {element.type === 'data-table' && (
-                   <div
-                     className="w-full h-full border rounded-lg overflow-hidden"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="text-xs text-gray-500 p-2 border-b">Data Table</div>
-                     <div className="p-2 text-xs">
-                       <div className="grid grid-cols-3 gap-2 mb-1 font-medium">
-                         {(element.props.headers || []).map((header: string, index: number) => (
-                           <div key={index}>{header}</div>
-                         ))}
-                       </div>
-                       {(element.props.rows || []).map((row: string[], index: number) => (
-                         <div key={index} className="grid grid-cols-3 gap-2 text-xs">
-                           {row.map((cell: string, cellIndex: number) => (
-                             <div key={cellIndex}>{cell}</div>
-                           ))}
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'chart' && (
-                   <div
-                     className="w-full h-full border rounded-lg p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="text-center text-gray-600">
-                       <div className="text-lg mb-2">📊</div>
-                       <div className="text-sm">{element.props.type || 'bar'} Chart</div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'progress-bar' && (
-                   <div
-                     className="w-full h-full flex items-center p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="w-full">
-                       <div className="text-xs text-gray-600 mb-1">{element.props.label || 'Progress'}</div>
-                       <div className="w-full bg-gray-200 rounded-full h-2">
-                         <div
-                           className="h-2 rounded-full"
-                           style={{
-                             width: `${element.props.value || 0}%`,
-                             backgroundColor: element.props.fillColor || '#3b82f6'
-                           }}
-                         ></div>
-                       </div>
-                       {element.props.showPercentage && (
-                         <div className="text-xs text-gray-600 mt-1">{element.props.value || 0}%</div>
-                       )}
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'stats-card' && (
-                   <div
-                     className="w-full h-full border rounded-lg p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="text-sm text-gray-600">{element.props.title || 'Total Users'}</div>
-                     <div className="text-2xl font-bold">{element.props.value || '1,234'}</div>
-                     <div className="text-xs text-green-600">{element.props.change || '+12%'}</div>
-                   </div>
-                 )}
-
-                 {element.type === 'social-links' && (
-                   <div
-                     className="w-full h-full flex items-center justify-center gap-2 p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || 'transparent'
-                     }}
-                   >
-                     {(element.props.platforms || []).map((platform: string, index: number) => (
-                       <div key={index} className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs">
-                         {platform.charAt(0).toUpperCase()}
-                       </div>
-                     ))}
-                   </div>
-                 )}
-
-                 {element.type === 'whatsapp-button' && (
-                   <div
-                     className="w-full h-full flex items-center justify-center rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#25d366',
-                       color: element.props.textColor || '#ffffff'
-                     }}
-                   >
-                     <div className="text-center">
-                       <div className="text-lg mb-1">💬</div>
-                       <div className="text-sm font-medium">WhatsApp</div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'contact-info' && (
-                   <div
-                     className="w-full h-full border rounded-lg p-4"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <div className="space-y-2 text-sm">
-                       <div className="flex items-center gap-2">
-                         <span>📞</span>
-                         <span>{element.props.phone || '+1 (555) 123-4567'}</span>
-                       </div>
-                       <div className="flex items-center gap-2">
-                         <span>✉️</span>
-                         <span>{element.props.email || 'contact@example.com'}</span>
-                       </div>
-                       <div className="flex items-center gap-2">
-                         <span>📍</span>
-                         <span>{element.props.address || '123 Main St, City, State'}</span>
-                       </div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'search-bar' && (
-                   <div
-                     className="w-full h-full border rounded-lg flex items-center p-2"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#ffffff',
-                       borderColor: element.props.borderColor || '#e5e7eb'
-                     }}
-                   >
-                     <input
-                       type="text"
-                       className="flex-1 text-sm outline-none"
-                       placeholder={element.props.placeholder || 'Search...'}
-                     />
-                     <button className="ml-2 px-3 py-1 bg-blue-600 text-white rounded text-xs">
-                       {element.props.buttonText || 'Search'}
-                     </button>
-                   </div>
-                 )}
-
-                 {element.type === 'timer' && (
-                   <div
-                     className="w-full h-full flex items-center justify-center rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#1f2937',
-                       color: element.props.textColor || '#ffffff'
-                     }}
-                   >
-                     <div className="text-center">
-                       <div className="text-lg mb-1">⏰</div>
-                       <div className="text-sm">Countdown Timer</div>
-                     </div>
-                   </div>
-                 )}
-
-                 {element.type === 'rating' && (
-                   <div className="w-full h-full flex items-center gap-1 p-2">
-                     {Array.from({ length: element.props.max || 5 }).map((_, index) => (
-                       <span
-                         key={index}
-                         className="text-lg"
-                         style={{
-                           color: index < (element.props.value || 0) ? (element.props.color || '#fbbf24') : '#e5e7eb'
-                         }}
-                       >
-                         ★
-                       </span>
-                     ))}
-                     {element.props.showValue && (
-                       <span className="text-sm text-gray-600 ml-2">{element.props.value || 0}</span>
-                     )}
-                   </div>
-                 )}
-
-                 {element.type === 'badge' && (
-                   <div
-                     className="w-full h-full flex items-center justify-center rounded-lg"
-                     style={{
-                       backgroundColor: element.props.backgroundColor || '#dbeafe',
-                       color: element.props.color || '#3b82f6'
-                     }}
-                   >
-                     <span className="text-sm font-medium">{element.props.text || 'New'}</span>
-                   </div>
-                 )}
-
-                 {element.type === 'divider' && (
-                   <div
-                     className="w-full h-full flex items-center justify-center"
-                     style={{
-                       backgroundColor: 'transparent'
-                     }}
-                   >
-                     <div
-                       className="w-full"
-                       style={{
-                         height: `${element.props.thickness || 2}px`,
-                         backgroundColor: element.props.color || '#e5e7eb'
-                       }}
-                     ></div>
-                   </div>
-                 )}
+          <ElementRenderer element={element} isDragging={isDragging} isResizing={isResizing} />
         </div>
 
         {/* Element Actions Overlay */}
@@ -1542,7 +570,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
               variant="ghost"
                   className={cn(
                     "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
-                    element.props.fontWeight === 'bold' 
+                    element.props.fontWeight === 'bold'
                       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
                       : "text-gray-300 hover:text-white hover:bg-gray-700/50"
                   )}
@@ -1559,7 +587,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                   variant="ghost"
                   className={cn(
                     "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
-                    element.props.fontStyle === 'italic' 
+                    element.props.fontStyle === 'italic'
                       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
                       : "text-gray-300 hover:text-white hover:bg-gray-700/50"
                   )}
@@ -1576,7 +604,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                   variant="ghost"
                   className={cn(
                     "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
-                    element.props.textDecoration === 'underline' 
+                    element.props.textDecoration === 'underline'
                       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
                       : "text-gray-300 hover:text-white hover:bg-gray-700/50"
                   )}
@@ -1595,7 +623,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                   variant="ghost"
                   className={cn(
                     "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
-                    element.props.textAlign === 'left' 
+                    element.props.textAlign === 'left'
                       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
                       : "text-gray-300 hover:text-white hover:bg-gray-700/50"
                   )}
@@ -1612,7 +640,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                   variant="ghost"
                   className={cn(
                     "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
-                    element.props.textAlign === 'center' 
+                    element.props.textAlign === 'center'
                       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
                       : "text-gray-300 hover:text-white hover:bg-gray-700/50"
                   )}
@@ -1629,7 +657,7 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
                   variant="ghost"
                   className={cn(
                     "h-7 w-7 p-0 transition-all duration-200 hover:scale-105",
-                    element.props.textAlign === 'right' 
+                    element.props.textAlign === 'right'
                       ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
                       : "text-gray-300 hover:text-white hover:bg-gray-700/50"
                   )}
@@ -1857,6 +885,61 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
               }}
             />
 
+            {/* Content Area Boundaries - Visual Guides */}
+            <div 
+              className="absolute pointer-events-none z-40"
+              style={{
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${page.settings.maxWidth}px`,
+                minHeight: '100vh',
+                maxWidth: 'calc(100% - 40px)'
+              }}
+            >
+              {/* Top Boundary Line */}
+              <div 
+                className="absolute top-0 left-0 right-0 border-t-2 border-dashed border-blue-500 opacity-70"
+                style={{ height: '2px' }}
+              >
+                <div className="absolute -top-5 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded shadow-md font-semibold">
+                  Top
+                </div>
+              </div>
+
+              {/* Left Boundary Line */}
+              <div 
+                className="absolute top-0 bottom-0 left-0 border-l-2 border-dashed border-blue-500 opacity-70"
+                style={{ width: '2px' }}
+              >
+                <div 
+                  className="absolute top-6 -left-10 bg-blue-500 text-white text-xs px-2 py-1 rounded shadow-md font-semibold whitespace-nowrap"
+                  style={{ transform: 'rotate(-90deg)', transformOrigin: 'center' }}
+                >
+                  Left
+                </div>
+              </div>
+
+              {/* Right Boundary Line */}
+              <div 
+                className="absolute top-0 bottom-0 right-0 border-r-2 border-dashed border-blue-500 opacity-70"
+                style={{ width: '2px' }}
+              >
+                <div 
+                  className="absolute top-6 -right-10 bg-blue-500 text-white text-xs px-2 py-1 rounded shadow-md font-semibold whitespace-nowrap"
+                  style={{ transform: 'rotate(90deg)', transformOrigin: 'center' }}
+                >
+                  Right
+                </div>
+              </div>
+
+              {/* Max Width Indicator */}
+              <div 
+                className="absolute top-3 right-3 bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-lg font-mono font-semibold"
+              >
+                {page.settings.maxWidth}px
+              </div>
+            </div>
+
             {/* Smart Guides */}
             {smartGuides && (
               <div className="absolute inset-0 pointer-events-none z-50">
@@ -1923,18 +1006,38 @@ const BuilderCanvas = forwardRef<HTMLDivElement, BuilderCanvasProps>(({
               </div>
             )}
 
-            {/* Elements */}
-            {page.elements.map(renderElement)}
-            
-            {/* Extra Space for Scrolling - Only when needed */}
-            {page.elements.length > 0 && (
-              <div style={{ height: '50vh', width: '100%' }}></div>
-            )}
+            {/* Content Area Container - Max Width Constraint (matches visual guides) */}
+            <div 
+              className="relative"
+              style={{
+                margin: '0 auto',
+                width: `${page.settings.maxWidth}px`,
+                maxWidth: 'calc(100% - 40px)',
+                minHeight: '100vh'
+              }}
+            >
+              {/* Elements */}
+              {page.elements.map(renderElement)}
+              
+              {/* Extra Space for Scrolling - Only when needed */}
+              {page.elements.length > 0 && (
+                <div style={{ height: '50vh', width: '100%' }}></div>
+              )}
+            </div>
           </div>
 
           {/* Drop Zone Indicator */}
           {page.elements.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center" style={{ minHeight: '100vh' }}>
+            <div 
+              className="absolute flex items-center justify-center" 
+              style={{ 
+                minHeight: '100vh',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${page.settings.maxWidth}px`,
+                maxWidth: 'calc(100% - 40px)'
+              }}
+            >
               <div className="text-center text-gray-400">
                 <div className="text-4xl mb-2">📄</div>
                 <div className="text-lg font-medium">Start building your page</div>
